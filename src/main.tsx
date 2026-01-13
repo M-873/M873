@@ -1,6 +1,10 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { suppressAllGitHubTrackingErrors } from "./utils/githubStatsSuppressor.ts";
+
+// 🛠️ GitHub Stats Error Suppression - Auto-fix for harmless API error
+suppressAllGitHubTrackingErrors();
 
 // GitHub Pages SPA Router Fix
 // This handles the redirect from 404.html and updates the browser history
