@@ -21,9 +21,8 @@ const setupGitHubPagesRouter = () => {
         .join('&');
       
       // Update the browser history without reloading the page
-      // For GitHub Pages, we need to handle the base path correctly
-      const basePath = '/M873/';
-      const newUrl = basePath + originalPath + l.hash;
+      // Use the current pathname as base (which includes /M873/)
+      const newUrl = l.pathname + originalPath + l.hash;
       window.history.replaceState(null, '', newUrl);
     }
   }
