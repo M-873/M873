@@ -1,24 +1,31 @@
-// GitHub Pages SPA Router Fix
-// This handles the redirect from 404.html for GitHub Pages
+/**
+ * GitHub Pages SPA Router Fix
+ * 
+ * This utility handles the redirect from 404.html and updates the browser history
+ * to allow React Router to work correctly on GitHub Pages.
+ * 
+ * When GitHub Pages serves a 404, it redirects to 404.html which then redirects
+ * back to the app with the original path as a query parameter. This utility
+ * parses that query parameter and updates the browser history.
+ */
 
 export const setupGitHubPagesRouter = () => {
-  // Check if we're on GitHub Pages
+  // Only run on GitHub Pages
   const isGitHubPages = window.location.hostname.includes('github.io');
   
   if (isGitHubPages) {
-    // Handle GitHub Pages redirect
     const l = window.location;
     
-    // Check if this is a redirect from 404.html
+    // Check if we've been redirected from 404.html
     if (l.search.includes('?/')) {
-      // Extract the original path
+      // Parse the original path from the query parameter
       const originalPath = l.search
-        .slice(2) // Remove "?/"
+        .slice(2) // Remove '?/'
         .split('&')
         .map((segment) => segment.replace(/~and~/g, '&'))
         .join('&');
       
-      // Replace the URL without reloading the page
+      // Update the browser history without reloading the page
       const newUrl = l.pathname + originalPath + l.hash;
       window.history.replaceState(null, '', newUrl);
     }
