@@ -17,32 +17,25 @@
       // Since GitHub Pages only serves static files, this allows React Router
       // to handle client-side routing correctly
       
-      (function(l) {
-        if (l.search[1] === '/' ) {
-          var decoded = l.search.slice(1).split('&').map(function(s) { 
-            return s.replace(/~and~/g, '&')
-          }).join('?');
-          window.history.replaceState(null, null,
-            l.pathname.slice(0, -1) + decoded + l.hash
-          );
-        }
-      }(window.location))
-      
       // Configuration for your specific repository
       // pathSegmentsToKeep = 0 means: keep 0 path segments (for root access)
       // This is correct for https://username.github.io/repository-name/
       var pathSegmentsToKeep = 0;
       
       var l = window.location;
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-        l.pathname.slice(1).split('/').map(function (segment) {
-          return segment.replace(/&/g, '~and~');
-        }).join('/') +
-        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
+      
+      // Check if we're already in the redirect format to avoid infinite loops
+      if (l.search.indexOf('?/') !== 0) {
+        l.replace(
+          l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+          l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+          l.pathname.slice(1).split('/').map(function (segment) {
+            return segment.replace(/&/g, '~and~');
+          }).join('/') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash
+        );
+      }
     </script>
   </head>
   <body>
