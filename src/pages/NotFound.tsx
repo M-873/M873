@@ -5,7 +5,10 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    // Only log actual 404s, not GitHub Pages routing
+    if (!location.pathname.includes('/M873/')) {
+      console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    }
   }, [location.pathname]);
 
   return (

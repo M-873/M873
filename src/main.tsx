@@ -30,12 +30,6 @@ const setupGitHubPagesRouter = () => {
       const newUrl = basePath + originalPath + l.hash;
       window.history.replaceState(null, '', newUrl);
     }
-    
-    // Also handle the case where we're at the root path
-    if (l.pathname === '/M873/' && !l.search) {
-      // We're at the correct root path, no redirect needed
-      return;
-    }
   }
 };
 
