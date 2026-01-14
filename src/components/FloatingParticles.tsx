@@ -16,12 +16,13 @@ const ATTRACTION_RADIUS = 400;
 const ATTRACTION_STRENGTH = 0.25;
 const REPULSION_RADIUS = 300;
 const REPULSION_STRENGTH = 10;
-const RETURN_STRENGTH = 0.08; // Increased from 0.01 to 0.08 for faster return
+const RETURN_STRENGTH = 0.02; // Reduced to prevent overshooting and high speed movement
 
 const FloatingParticles = () => {
   const [particles, setParticles] = useState<Particle[]>([]);
   const mousePos = useRef({ x: -1000, y: -1000 });
   const clickTime = useRef(0);
+  const mouseLeaveTime = useRef(0);
   const animationRef = useRef<number>();
 
   useEffect(() => {
@@ -47,6 +48,7 @@ const FloatingParticles = () => {
 
     const handleMouseLeave = () => {
       mousePos.current = { x: -1000, y: -1000 };
+      mouseLeaveTime.current = Date.now();
       // Force immediate return to home positions when mouse leaves window
       clickTime.current = 0; // Reset click time to stop repulsion
     };
@@ -69,6 +71,7 @@ const FloatingParticles = () => {
   useEffect(() => {
     const animate = () => {
       const timeSinceClick = Date.now() - clickTime.current;
+      const timeSinceMouseLeave = Date.now() - mouseLeaveTime.current;
       const isRepelling = timeSinceClick < 150; // Repel for 150ms after click
 
       setParticles((prev) =>
@@ -82,8 +85,9 @@ const FloatingParticles = () => {
           // Check if mouse is far away (mouse left the screen or is at default position)
           const isMouseFarAway = mousePos.current.x === -1000 && mousePos.current.y === -1000;
           const isMouseOutsideRadius = distance > ATTRACTION_RADIUS;
+          const shouldReturnHome = (isMouseFarAway || isMouseOutsideRadius) && timeSinceMouseLeave > 100; // Wait 100ms before returning
 
-          if (isMouseFarAway || isMouseOutsideRadius) {
+          if (shouldReturnHome) {
             // Return to home position when cursor is far away or left the screen
             const homeDx = particle.homeX - x;
             const homeDy = particle.homeY - y;
@@ -103,9 +107,9 @@ const FloatingParticles = () => {
             }
           }
 
-          // Apply stronger friction when returning home to stop movement faster
-          const isReturningHome = isMouseFarAway || isMouseOutsideRadius;
-          const friction = isReturningHome ? 0.85 : 0.94;
+          // Apply much stronger friction when returning home to stop movement faster
+          const isReturningHome = shouldReturnHome;
+          const friction = isReturningHome ? 0.92 : 0.94;
           vx *= friction;
           vy *= friction;
 
@@ -120,8 +124,8 @@ const FloatingParticles = () => {
             const homeDistance = Math.sqrt(homeDx * homeDx + homeDy * homeDy);
             const speed = Math.sqrt(vx * vx + vy * vy);
             
-            if (homeDistance < 5 && speed < 0.5) {
-              // Snap to exact home position and stop movement
+            if (homeDistance < 3 && speed < 1.0) {
+              // Snap to exact home position and stop movement completely
               x = particle.homeX;
               y = particle.homeY;
               vx = 0;
