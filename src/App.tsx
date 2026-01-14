@@ -15,6 +15,7 @@ import FloatingParticles from "./components/FloatingParticles";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
+const basename = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -22,7 +23,7 @@ const App = () => (
       <FloatingParticles />
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename={basename}>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
