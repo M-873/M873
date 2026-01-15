@@ -1,1 +1,1 @@
-main site link: https://mahfuzulislam873.github.io/M873/
+main site link: https://m-873.github.io/M873/
