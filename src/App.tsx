@@ -8,11 +8,13 @@ import Dashboard from "./pages/Dashboard";
 import UpcomingFeature from "./pages/UpcomingFeature";
 import Profile from "./pages/Profile";
 import OwnerAuth from "./pages/OwnerAuth";
+import LearnMore from "./pages/LearnMore";
 // Frontend deployment complete
 import OwnerDashboard from "./pages/OwnerDashboard";
 import NotFound from "./pages/NotFound";
 import FloatingParticles from "./components/FloatingParticles";
 import Auth from "./pages/Auth";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 const basename = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -30,8 +32,10 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/upcoming/:id" element={<UpcomingFeature />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/learn-more" element={<LearnMore />} />
           <Route path="/owner/login" element={<OwnerAuth />} />
           <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+          <Route path="/oauth/consent" element={<OAuthConsent />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

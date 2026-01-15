@@ -41,7 +41,7 @@ const Landing = () => {
             <Button size="lg" className="px-8 py-6 text-lg" onClick={() => navigate('/dashboard')}>
               Get Started
             </Button>
-            <Button variant="outline" size="lg" className="px-8 py-6 text-lg">
+            <Button variant="outline" size="lg" className="px-8 py-6 text-lg" onClick={() => navigate('/learn-more')}>
               Learn More
             </Button>
             <Button 

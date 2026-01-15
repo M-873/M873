@@ -192,9 +192,39 @@ All colors MUST be HSL.
   }
 }
 
+@keyframes welcome-glow {
+  0% {
+    text-shadow: 0 0 10px #ff3b30,
+                 0 0 20px #ff3b30,
+                 0 0 30px #ff3b30,
+                 0 0 40px #ff3b30;
+    color: #ff3b30;
+  }
+  33% {
+    text-shadow: 0 0 10px #ffcc00,
+                 0 0 20px #ffcc00,
+                 0 0 30px #ffcc00,
+                 0 0 40px #ffcc00;
+    color: #ffcc00;
+  }
+  66% {
+    text-shadow: 0 0 10px #34c759,
+                 0 0 20px #34c759,
+                 0 0 30px #34c759,
+                 0 0 40px #34c759;
+    color: #34c759;
+  }
+  100% {
+    text-shadow: 0 0 10px #ff3b30,
+                 0 0 20px #ff3b30,
+                 0 0 30px #ff3b30,
+                 0 0 40px #ff3b30;
+    color: #ff3b30;
+  }
+}
+
 .glow-text {
-  animation: glow-pulse 2s ease-in-out infinite;
-  color: hsl(266 80% 70%);
+  animation: welcome-glow 2s ease-in-out infinite;
 }
 
 @keyframes logo-color-cycle-1 {
