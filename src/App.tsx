@@ -28,6 +28,8 @@ const App = () => (
       <BrowserRouter basename={basename}>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/M873" element={<Landing />} />
+          <Route path="/M873/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/upcoming/:id" element={<UpcomingFeature />} />

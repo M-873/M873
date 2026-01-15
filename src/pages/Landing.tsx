@@ -28,12 +28,15 @@ const Landing = () => {
       <main className="container mx-auto px-6 py-20">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="space-y-4">
-            <p className="text-sm md:text-base font-medium tracking-wider uppercase text-black">
+            <p className="text-sm md:text-base font-medium tracking-wider uppercase glow-text">
               Welcome to M873
             </p>
-            <h1 className="text-5xl md:text-6xl font-bold text-primary leading-tight">M873 SIMPLE AI SOLUTIONS</h1>
+            <h1 className="text-5xl md:text-6xl font-bold text-primary leading-tight">M873 A New Era of Intelligence</h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-              M873 is an easy AI platform for learning and building projects. You can explore AI, practice development, and create smart solutions with simple tools.
+              M873 is a modern AI platform built for creators, learners, and developers. Here, you can explore powerful AI models, practice real development, and understand how to build your own AI systems. With free APIs, interactive tools, and practical guidance, M873 makes advanced technology simple and accessible for everyone.
+            </p>
+            <p className="text-lg text-muted-foreground/80 max-w-xl mx-auto italic">
+              Step into a world where ideas turn into intelligent creations — welcome to the future with M873.
             </p>
           </div>
 
@@ -41,7 +44,7 @@ const Landing = () => {
             <Button size="lg" className="px-8 py-6 text-lg" onClick={() => navigate('/dashboard')}>
               Get Started
             </Button>
-            <Button variant="outline" size="lg" className="px-8 py-6 text-lg" onClick={() => window.location.href = './learn-more/'}>
+            <Button variant="outline" size="lg" className="px-8 py-6 text-lg">
               Learn More
             </Button>
             <Button 

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Logo from "@/components/Logo";
 
@@ -27,127 +28,132 @@ const LearnMore = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-12">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <main className="container mx-auto px-6 py-20">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
           {/* Title Section */}
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-primary">
+          <div className="space-y-4">
+            <h1 className="text-5xl md:text-6xl font-bold text-primary leading-tight">
               About M873
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
               Learn more about our mission and vision
             </p>
           </div>
 
           {/* Content Sections */}
-          <div className="space-y-12">
+          <div className="grid md:grid-cols-1 gap-6 pt-12">
             {/* Mission Section */}
-            <section className="space-y-4">
-              <h2 className="text-2xl md:text-3xl font-semibold text-primary">
-                Our Mission
-              </h2>
-              <div className="prose prose-lg max-w-none text-muted-foreground">
-                <p>
-                  M873 is built with a clear mission: to make Artificial Intelligence simple, accessible, and free for everyone—especially students, beginners, and independent learners.
-                </p>
-                <p>
-                  At M873, you will find a growing collection of easy-to-use, cost-free AI tools designed to help you learn, practice, and build real-world solutions without financial barriers. All tools available on this platform are created and maintained by M873, ensuring simplicity, reliability, and educational value.
-                </p>
-              </div>
-            </section>
+            <Card className="border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
+              <CardContent className="p-6 space-y-4">
+                <h2 className="text-2xl md:text-3xl font-semibold text-primary">
+                  Our Mission
+                </h2>
+                <div className="prose prose-lg max-w-none text-muted-foreground">
+                  <p>
+                    M873 is built with a clear mission: to make Artificial Intelligence simple, accessible, and free for everyone—especially students, beginners, and independent learners.
+                  </p>
+                  <p>
+                    At M873, you will find a growing collection of easy-to-use, cost-free AI tools designed to help you learn, practice, and build real-world solutions without financial barriers. All tools available on this platform are created and maintained by M873, ensuring simplicity, reliability, and educational value.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* What You Can Do Section */}
-            <section className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-semibold text-primary">
-                What You Can Do with M873
-              </h2>
-              
-              <div className="grid gap-6">
-                <div className="space-y-3">
-                  <h3 className="text-xl font-semibold text-primary">
-                    Learn AI the Easy Way
-                  </h3>
-                  <p className="text-muted-foreground">
-                    M873 removes complexity from AI learning. You can understand core AI concepts, train models, and explore practical use cases without advanced technical knowledge.
-                  </p>
-                </div>
+            <Card className="border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
+              <CardContent className="p-6 space-y-6">
+                <h2 className="text-2xl md:text-3xl font-semibold text-primary">
+                  What You Can Do with M873
+                </h2>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Card className="border-border/30">
+                    <CardContent className="p-4 space-y-3">
+                      <h3 className="text-xl font-semibold text-primary">
+                        Learn AI the Easy Way
+                      </h3>
+                      <p className="text-muted-foreground">
+                        M873 removes complexity from AI learning. You can understand core AI concepts, train models, and explore practical use cases without advanced technical knowledge.
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                <div className="space-y-3">
-                  <h3 className="text-xl font-semibold text-primary">
-                    Train AI Using Free Tools
-                  </h3>
-                  <p className="text-muted-foreground">
-                    The platform provides free tools that allow users to train AI models, experiment with data, and understand how AI works in real scenarios—without paid software or subscriptions.
-                  </p>
-                </div>
+                  <Card className="border-border/30">
+                    <CardContent className="p-4 space-y-3">
+                      <h3 className="text-xl font-semibold text-primary">
+                        Train AI Using Free Tools
+                      </h3>
+                      <p className="text-muted-foreground">
+                        The platform provides free tools that allow users to train AI models, experiment with data, and understand how AI works in real scenarios—without paid software or subscriptions.
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                <div className="space-y-3">
-                  <h3 className="text-xl font-semibold text-primary">
-                    Student-Focused Utilities
-                  </h3>
-                  <p className="text-muted-foreground">
-                    M873 offers helpful tools for students to support:
-                  </p>
-                  <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
-                    <li>Academic studies</li>
-                    <li>Daily productivity</li>
-                    <li>Hostel and shared-living management</li>
-                  </ul>
-                  <p className="text-muted-foreground">
-                    These tools are designed to make student life more organized, efficient, and stress-free.
-                  </p>
-                </div>
+                  <Card className="border-border/30">
+                    <CardContent className="p-4 space-y-3">
+                      <h3 className="text-xl font-semibold text-primary">
+                        Student-Focused Utilities
+                      </h3>
+                      <p className="text-muted-foreground">
+                        M873 offers helpful tools for students to support:
+                      </p>
+                      <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
+                        <li>Academic studies</li>
+                        <li>Daily productivity</li>
+                        <li>Hostel and shared-living management</li>
+                      </ul>
+                      <p className="text-muted-foreground">
+                        These tools are designed to make student life more organized, efficient, and stress-free.
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                <div className="space-y-3">
-                  <h3 className="text-xl font-semibold text-primary">
-                    Practical AI Usage
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Learn how to use AI effectively—not just theoretically. M873 focuses on real-world AI applications, helping users understand how AI can improve learning, decision-making, and daily tasks.
-                  </p>
-                </div>
+                  <Card className="border-border/30">
+                    <CardContent className="p-4 space-y-3">
+                      <h3 className="text-xl font-semibold text-primary">
+                        Practical AI Usage
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Learn how to use AI effectively—not just theoretically. M873 focuses on real-world AI applications, helping users understand how AI can improve learning, decision-making, and daily tasks.
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                <div className="space-y-3">
-                  <h3 className="text-xl font-semibold text-primary">
-                    Future-Ready Platform
-                  </h3>
-                  <p className="text-muted-foreground">
-                    M873 is continuously evolving. Upcoming tools and features are being developed to make the platform more:
-                  </p>
-                  <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
-                    <li>Advanced</li>
-                    <li>Sustainable</li>
-                    <li>Beneficial for long-term learning and innovation</li>
-                  </ul>
+                  <Card className="border-border/30">
+                    <CardContent className="p-4 space-y-3">
+                      <h3 className="text-xl font-semibold text-primary">
+                        Future-Ready Platform
+                      </h3>
+                      <p className="text-muted-foreground">
+                        M873 is continuously evolving. Upcoming tools and features are being developed to make the platform more:
+                      </p>
+                      <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
+                        <li>Advanced</li>
+                        <li>Sustainable</li>
+                        <li>Beneficial for long-term learning and innovation</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
-            </section>
+              </CardContent>
+            </Card>
 
             {/* Vision Section */}
-            <section className="space-y-4">
-              <h2 className="text-2xl md:text-3xl font-semibold text-primary">
-                Our Vision
-              </h2>
-              <div className="prose prose-lg max-w-none text-muted-foreground">
-                <p>
-                  The goal of M873 is to provide the lowest-cost AI learning experience—free whenever possible—while maintaining quality, usability, and future growth. We aim to build a healthy, profitable, and advanced ecosystem that empowers learners and creators to grow with AI.
-                </p>
-                <p>
-                  M873 is not just a platform. It is a new era of intelligent learning, built for the future.
-                </p>
-              </div>
-            </section>
-          </div>
-
-          {/* Call to Action */}
-          <div className="text-center pt-8">
-            <Button 
-              size="lg" 
-              className="px-8 py-6 text-lg" 
-              onClick={() => navigate('/dashboard')}
-            >
-              Get Started Now
-            </Button>
+            <Card className="border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
+              <CardContent className="p-6 space-y-4">
+                <h2 className="text-2xl md:text-3xl font-semibold text-primary">
+                  Our Vision
+                </h2>
+                <div className="prose prose-lg max-w-none text-muted-foreground">
+                  <p>
+                    The goal of M873 is to provide the lowest-cost AI learning experience—free whenever possible—while maintaining quality, usability, and future growth. We aim to build a healthy, profitable, and advanced ecosystem that empowers learners and creators to grow with AI.
+                  </p>
+                  <p>
+                    M873 is not just a platform. It is a new era of intelligent learning, built for the future.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
@@ -164,6 +170,13 @@ const LearnMore = () => {
           </p>
         </div>
       </footer>
+
+      {/* Hidden Owner Access Dot */}
+      <button 
+        onClick={() => navigate('/owner/login')} 
+        className="fixed bottom-4 right-4 w-2 h-2 bg-black rounded-full opacity-50 hover:opacity-100 transition-opacity cursor-pointer z-50"
+        aria-label="Owner Access"
+      />
     </div>
   );
 };
