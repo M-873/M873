@@ -1,21 +1,100 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
-import { Shield, Sparkles, Zap, Mail, Phone, Facebook, Github, Instagram, MessageCircle, Linkedin, User } from "lucide-react";
+import { Shield, Sparkles, Zap, Mail, Phone, Facebook, Github, Instagram, MessageCircle, Linkedin, User, Send, Bot } from "lucide-react";
 import Logo from "@/components/Logo";
 import ownerAvatar from "@/assets/owner-avatar.jfif";
+import { loadDataset, DatasetParser } from "@/utils/datasetParser";
+
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
 
 const Landing = () => {
   const navigate = useNavigate();
   const [showOwnerDialog, setShowOwnerDialog] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [datasetParser, setDatasetParser] = useState<DatasetParser | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages]);
+
+  useEffect(() => {
+    const loadDatasetAsync = async () => {
+      const parser = await loadDataset();
+      if (parser) {
+        setDatasetParser(parser);
+      }
+    };
+    loadDatasetAsync();
+  }, []);
+
+  const handleSendMessage = async () => {
+    if (!chatInput.trim()) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: "user",
+      content: chatInput,
+      timestamp: new Date(),
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput("");
+
+    // Use dataset parser to find answer
+    setTimeout(() => {
+      let response: string;
+      
+      // Check for basic greetings
+      const lowerInput = chatInput.toLowerCase().trim();
+      if (['hi', 'hello', 'hey'].includes(lowerInput)) {
+        response = "Hello! I'm here to help you learn about M873. What would you like to know?";
+      } else if (['what\'s your name', 'what is your name', 'who are you'].includes(lowerInput)) {
+        response = "I'm M873 AI Assistant. I'm here to answer your questions about M873 platform.";
+      } else if (datasetParser) {
+        // Try to find answer from dataset
+        const answer = datasetParser.findAnswer(chatInput);
+        response = answer || "I couldn't find specific information about that. Please try asking in a different way or check our documentation.";
+      } else {
+        response = "I'm still loading the dataset. Please wait a moment and try again.";
+      }
+
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: response,
+        timestamp: new Date(),
+      };
+      setChatMessages(prev => [...prev, aiMessage]);
+    }, 1000);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between bg-secondary-foreground">
           <div className="flex items-center gap-3">
-            <Logo className="w-10 h-10" />
+            <Logo className="w-10 h-10" colorMode="rainbow" />
             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">M873</span>
           </div>
           <div className="flex gap-3">
@@ -91,6 +170,60 @@ const Landing = () => {
                 <p className="text-sm text-muted-foreground">
                   Upcoming features in development
                 </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Chat Box */}
+          <div className="max-w-2xl mx-auto mt-12">
+            <Card className="border-border/50">
+              <CardContent className="p-4">
+                <h3 className="text-base font-semibold text-foreground mb-3">Ask about M873</h3>
+                
+                {/* Chat Messages */}
+                <div className="h-32 overflow-y-auto border rounded-lg p-3 mb-3 bg-muted/30">
+                  {chatMessages.length === 0 ? (
+                    <div className="text-muted-foreground text-center py-4 text-sm flex items-center justify-center gap-2">
+                      <Bot className="w-4 h-4" />
+                      <span>Asked about M873.</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {chatMessages.map((message) => (
+                        <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                          <div className={`flex items-start gap-2 max-w-xs ${message.role === "user" ? "flex-row-reverse" : ""}`}>
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${message.role === "user" ? "bg-primary" : "bg-muted"}`}>
+                              {message.role === "user" ? (
+                                <User className="w-3 h-3 text-primary-foreground" />
+                              ) : (
+                                <Logo className="w-3 h-3" />
+                              )}
+                            </div>
+                            <div className={`rounded-lg px-2 py-1 text-xs ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                              <p className="text-xs">{message.content}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <div ref={chatEndRef} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Chat Input */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="🤖 Asked about M873."
+                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <Button onClick={handleSendMessage} size="sm">
+                    <Send className="w-3 h-3" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>

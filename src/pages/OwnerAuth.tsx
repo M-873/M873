@@ -14,12 +14,11 @@ const OwnerAuth = () => {
   const navigate = useNavigate();
   const { isOwner, loading } = useOwnerAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [email] = useState("mahfuzulislam873@gmail.com");
-  const [password] = useState("mahfugul873");
+  const [email, setEmail] = useState("mahfuzulislam873@gmail.com");
+  const [password, setPassword] = useState("mahfugul873");
   const [otp, setOtp] = useState("");
+  const [showOtp, setShowOtp] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [countdown, setCountdown] = useState(0);
   const ALLOWED_EMAIL = "mahfuzulislam873@gmail.com";
   const ALLOWED_PASSWORD = "mahfugul873";
 
@@ -28,26 +27,6 @@ const OwnerAuth = () => {
       navigate("/owner/dashboard");
     }
   }, [isOwner, loading, navigate]);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [countdown]);
-
-  useEffect(() => {
-    if (otpSent && otp.length === 6 && otp === generatedOtp && !isLoading) {
-      // Auto-verify when complete OTP is entered
-      const form = document.querySelector('form');
-      if (form) {
-        form.dispatchEvent(new Event('submit', { cancelable: true }));
-      }
-    }
-  }, [otp, otpSent, generatedOtp, isLoading]);
 
   const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -66,8 +45,7 @@ const OwnerAuth = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast.success("OTP sent to your email!");
-      setOtpSent(true);
-      setCountdown(60); // Start 60-second countdown
+      setShowOtp(true);
     } catch (error) {
       toast.error("Failed to send OTP");
     }
@@ -83,7 +61,7 @@ const OwnerAuth = () => {
         return;
       }
 
-      if (!otpSent) {
+      if (!showOtp) {
         // First step: Send OTP
         await sendOTP();
         setIsLoading(false);
@@ -93,7 +71,6 @@ const OwnerAuth = () => {
       // Second step: Verify OTP and sign in
       if (otp !== generatedOtp) {
         toast.error("Invalid OTP");
-        setIsLoading(false);
         return;
       }
 
@@ -177,33 +154,71 @@ const OwnerAuth = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="otp">Enter OTP</Label>
-                <Input
-                  id="otp"
-                  type="text"
-                  placeholder="Enter 6-digit code"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  required
-                  maxLength={6}
-                  pattern="[0-9]{6}"
-                  disabled={!otpSent}
-                />
-                {countdown > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    OTP expires in {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
-                  </p>
-                )}
-                {!otpSent && (
-                  <p className="text-xs text-muted-foreground">
-                    Click Verify OTP to receive your code
-                  </p>
-                )}
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {otpSent ? (isLoading ? "Verifying..." : "Verify OTP") : (isLoading ? "Sending OTP..." : "Verify OTP")}
-              </Button>
+              {!showOtp ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled
+                      className="bg-muted cursor-not-allowed"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled
+                      className="bg-muted cursor-not-allowed"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Sending OTP..." : "Send OTP"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="otp">Enter OTP</Label>
+                    <Input
+                      id="otp"
+                      type="text"
+                      placeholder="Enter 6-digit code"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      required
+                      maxLength={6}
+                      pattern="[0-9]{6}"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Check your email for the 6-digit code
+                    </p>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Verifying..." : "Verify OTP"}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={() => {
+                      setShowOtp(false);
+                      setOtp("");
+                      setGeneratedOtp("");
+                    }}
+                  >
+                    Back
+                  </Button>
+                </>
+              )}
             </form>
           </CardContent>
         </Card>

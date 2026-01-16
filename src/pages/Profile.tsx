@@ -33,9 +33,8 @@ const Profile = () => {
       if (error) throw error;
       toast.success("Logged out successfully");
       navigate("/");
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to log out";
-      toast.error(message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to log out");
     }
   };
 

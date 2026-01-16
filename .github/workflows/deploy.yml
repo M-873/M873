@@ -3,7 +3,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
 
 permissions:
   contents: read
@@ -12,7 +13,7 @@ permissions:
 
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -24,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "18"
           cache: "npm"
 
       - name: Install dependencies
@@ -36,9 +37,6 @@ jobs:
           NODE_ENV: production
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-
-      - name: Copy learn-more static page
-        run: cp -r learn-more dist/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -65,3 +63,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+

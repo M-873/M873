@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import FloatingParticles from "./components/FloatingParticles";
 import Auth from "./pages/Auth";
 import OAuthConsent from "./pages/OAuthConsent";
+import LogoColorDemo from "./components/LogoColorDemo";
 
 const queryClient = new QueryClient();
 const basename = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -28,8 +29,6 @@ const App = () => (
       <BrowserRouter basename={basename}>
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/M873" element={<Landing />} />
-          <Route path="/M873/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/upcoming/:id" element={<UpcomingFeature />} />
@@ -38,6 +37,7 @@ const App = () => (
           <Route path="/owner/login" element={<OwnerAuth />} />
           <Route path="/owner/dashboard" element={<OwnerDashboard />} />
           <Route path="/oauth/consent" element={<OAuthConsent />} />
+          <Route path="/logo-colors" element={<LogoColorDemo />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

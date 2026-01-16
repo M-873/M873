@@ -10,9 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Pencil, Trash2, Users, LayoutGrid, LogOut, Shield } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Users, LayoutGrid, LogOut, Shield, Database, Search } from "lucide-react";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
+import { DatasetParser, QAData } from "@/utils/datasetParser";
 
 interface Feature {
   id: string;
@@ -49,6 +50,13 @@ const OwnerDashboard = () => {
   const [featureLink, setFeatureLink] = useState("");
   const [editingFeature, setEditingFeature] = useState<Feature | null>(null);
   const [isFeatureDialogOpen, setIsFeatureDialogOpen] = useState(false);
+  
+  // Dataset management state
+  const [datasetParser, setDatasetParser] = useState<DatasetParser | null>(null);
+  const [datasetStats, setDatasetStats] = useState<{ total: number; english: number; bengali: number } | null>(null);
+  const [datasetSearch, setDatasetSearch] = useState("");
+  const [datasetSearchResults, setDatasetSearchResults] = useState<QAData[]>([]);
+  const [isDatasetLoading, setIsDatasetLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !isOwner) {
@@ -60,6 +68,7 @@ const OwnerDashboard = () => {
   useEffect(() => {
     if (isOwner) {
       fetchData();
+      loadDataset();
     }
   }, [isOwner]);
 
@@ -91,12 +100,37 @@ const OwnerDashboard = () => {
 
       if (rolesError) throw rolesError;
       setUserRoles(rolesData || []);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to load data";
-      toast.error(message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to load data");
     } finally {
       setIsLoadingData(false);
     }
+  };
+
+  const loadDataset = async () => {
+    setIsDatasetLoading(true);
+    try {
+      const { loadDataset } = await import("@/utils/datasetParser");
+      const parser = await loadDataset();
+      if (parser) {
+        setDatasetParser(parser);
+        setDatasetStats(parser.getStats());
+      }
+    } catch (error) {
+      toast.error("Failed to load dataset");
+    } finally {
+      setIsDatasetLoading(false);
+    }
+  };
+
+  const handleDatasetSearch = () => {
+    if (!datasetParser || !datasetSearch.trim()) {
+      setDatasetSearchResults([]);
+      return;
+    }
+    
+    const results = datasetParser.searchDataset(datasetSearch);
+    setDatasetSearchResults(results);
   };
 
   const handleSaveFeature = async () => {
@@ -139,9 +173,8 @@ const OwnerDashboard = () => {
       setEditingFeature(null);
       setIsFeatureDialogOpen(false);
       fetchData();
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to save feature";
-      toast.error(message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save feature");
     }
   };
 
@@ -153,9 +186,8 @@ const OwnerDashboard = () => {
       if (error) throw error;
       toast.success("Feature deleted!");
       fetchData();
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to delete feature";
-      toast.error(message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete feature");
     }
   };
 
@@ -202,9 +234,8 @@ const OwnerDashboard = () => {
         toast.success("Owner role granted");
       }
       fetchData();
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to update role";
-      toast.error(message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update role");
     }
   };
 
@@ -217,7 +248,7 @@ const OwnerDashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center">
         <div className="text-center">
-          <Logo className="w-16 h-16 mx-auto mb-4" />
+          <Logo className="w-16 h-16 mx-auto mb-4" colorMode="animated-fire" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -243,7 +274,7 @@ const OwnerDashboard = () => {
               >
                 <ArrowLeft className="w-4 h-4" />
               </Button>
-              <Logo className="w-8 h-8" />
+              <Logo className="w-8 h-8" colorMode="animated-fire" />
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
                 <span className="text-lg font-bold text-white">Owner Dashboard</span>
@@ -260,7 +291,7 @@ const OwnerDashboard = () => {
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         <Tabs defaultValue="features" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="features" className="flex items-center gap-2">
               <LayoutGrid className="w-4 h-4" />
               Features
@@ -268,6 +299,10 @@ const OwnerDashboard = () => {
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               Users
+            </TabsTrigger>
+            <TabsTrigger value="dataset" className="flex items-center gap-2">
+              <Database className="w-4 h-4" />
+              Dataset
             </TabsTrigger>
           </TabsList>
 
@@ -455,6 +490,87 @@ const OwnerDashboard = () => {
                     )}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Dataset Tab */}
+          <TabsContent value="dataset" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-primary">Dataset Management</h2>
+              {datasetStats && (
+                <div className="flex gap-4 text-sm text-muted-foreground">
+                  <span>Total: {datasetStats.total}</span>
+                  <span>English: {datasetStats.english}</span>
+                  <span>Bengali: {datasetStats.bengali}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Search */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Search Dataset</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Search questions and answers..."
+                    value={datasetSearch}
+                    onChange={(e) => setDatasetSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleDatasetSearch()}
+                  />
+                  <Button onClick={handleDatasetSearch}>
+                    <Search className="w-4 h-4 mr-2" />
+                    Search
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Results */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Search Results ({datasetSearchResults.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isDatasetLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Loading dataset...
+                  </div>
+                ) : !datasetParser ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Failed to load dataset
+                  </div>
+                ) : datasetSearchResults.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {datasetSearch ? "No results found" : "Enter a search term above"}
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {datasetSearchResults.map((qa, index) => (
+                      <div key={index} className="border rounded-lg p-4 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            qa.language === 'EN' 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {qa.language === 'EN' ? 'English' : 'Bengali'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium text-foreground">Q:</span>
+                          <p className="text-sm text-muted-foreground mt-1">{qa.question}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-foreground">A:</span>
+                          <p className="text-sm text-muted-foreground mt-1">{qa.answer}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
