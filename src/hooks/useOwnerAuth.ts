@@ -18,7 +18,7 @@ export const useOwnerAuth = () => {
         // Defer role check
         if (session?.user) {
           setTimeout(() => {
-            checkOwnerRole(session.user.id);
+            checkOwnerRole(session.user.id, session.user.email);
           }, 0);
         } else {
           setIsOwner(false);
@@ -33,7 +33,7 @@ export const useOwnerAuth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        checkOwnerRole(session.user.id);
+        checkOwnerRole(session.user.id, session.user.email);
       } else {
         setLoading(false);
       }
@@ -42,14 +42,27 @@ export const useOwnerAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkOwnerRole = async (userId: string) => {
+  const checkOwnerRole = async (userId: string, userEmail?: string) => {
     try {
+      console.log("Checking owner role for userId:", userId, "email:", userEmail);
+      
+      // Check if user has the allowed email
+      const ALLOWED_EMAIL = "mahfuzulislam873@gmail.com";
+      if (userEmail === ALLOWED_EMAIL) {
+        console.log("User has allowed email, considering as owner");
+        setIsOwner(true);
+        setLoading(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
         .eq("role", "owner")
         .maybeSingle();
+
+      console.log("Owner role check result:", { data, error });
 
       if (error) {
         console.error("Error checking owner role:", error);

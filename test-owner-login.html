@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Owner Login Test</title>
+</head>
+<body>
+    <h1>Owner Login Test</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="result"></div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+        
+        const supabase = createClient(
+            'https://mgkarabtbhluvkrfyrmu.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1na2FyYWJ0YmhsdXZrcmZ5cm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1NzkxNTQsImV4cCI6MjA4MDE1NTE1NH0.Kn14ixl4_2dyzH6BM3sAsdQ61lfPmtZPRoJD6Tz8cyc'
+        );
+
+        window.testLogin = async function() {
+            const result = document.getElementById('result');
+            try {
+                result.innerHTML = 'Testing login...';
+                
+                // Try to sign in
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: 'mahfuzulislam873@gmail.com',
+                    password: 'mahfugul873'
+                });
+                
+                if (error) {
+                    result.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                } else {
+                    result.innerHTML = `<p style="color: green;">Success! User: ${data.user.email}</p>`;
+                    
+                    // Check if user has owner role
+                    const { data: roleData, error: roleError } = await supabase
+                        .from('user_roles')
+                        .select('role')
+                        .eq('user_id', data.user.id)
+                        .eq('role', 'owner')
+                        .maybeSingle();
+                    
+                    if (roleError) {
+                        result.innerHTML += `<p style="color: red;">Role check error: ${roleError.message}</p>`;
+                    } else if (roleData) {
+                        result.innerHTML += `<p style="color: green;">Owner role confirmed!</p>`;
+                    } else {
+                        result.innerHTML += `<p style="color: orange;">No owner role found</p>`;
+                    }
+                }
+            } catch (err) {
+                result.innerHTML = `<p style="color: red;">Exception: ${err.message}</p>`;
+            }
+        };
+    </script>
+</body>
+</html>

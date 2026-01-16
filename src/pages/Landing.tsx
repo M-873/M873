@@ -7,6 +7,7 @@ import { Shield, Sparkles, Zap, Mail, Phone, Facebook, Github, Instagram, Messag
 import Logo from "@/components/Logo";
 import ownerAvatar from "@/assets/owner-avatar.jfif";
 import { loadDataset, DatasetParser } from "@/utils/datasetParser";
+import { createAIService, AIService } from "@/utils/aiService";
 
 interface ChatMessage {
   id: string;
@@ -21,6 +22,7 @@ const Landing = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [datasetParser, setDatasetParser] = useState<DatasetParser | null>(null);
+  const [aiService, setAiService] = useState<AIService | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -36,6 +38,12 @@ const Landing = () => {
       const parser = await loadDataset();
       if (parser) {
         setDatasetParser(parser);
+      }
+      
+      // Load AI service
+      const aiService = await createAIService();
+      if (aiService) {
+        setAiService(aiService);
       }
     };
     loadDatasetAsync();
@@ -54,32 +62,54 @@ const Landing = () => {
     setChatMessages(prev => [...prev, userMessage]);
     setChatInput("");
 
-    // Use dataset parser to find answer
-    setTimeout(() => {
-      let response: string;
-      
-      // Check for basic greetings
-      const lowerInput = chatInput.toLowerCase().trim();
-      if (['hi', 'hello', 'hey'].includes(lowerInput)) {
-        response = "Hello! I'm here to help you learn about M873. What would you like to know?";
-      } else if (['what\'s your name', 'what is your name', 'who are you'].includes(lowerInput)) {
-        response = "I'm M873 AI Assistant. I'm here to answer your questions about M873 platform.";
-      } else if (datasetParser) {
-        // Try to find answer from dataset
-        const answer = datasetParser.findAnswer(chatInput);
-        response = answer || "I couldn't find specific information about that. Please try asking in a different way or check our documentation.";
-      } else {
-        response = "I'm still loading the dataset. Please wait a moment and try again.";
+    // Use AI service to generate response
+    if (aiService) {
+      try {
+        const aiResponse = await aiService.generateResponse(chatInput);
+        
+        const aiMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: aiResponse.content,
+          timestamp: new Date(),
+        };
+        setChatMessages(prev => [...prev, aiMessage]);
+      } catch (error) {
+        console.error('AI service error:', error);
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "Sorry, I encountered an error processing your request. Please try again.",
+          timestamp: new Date(),
+        };
+        setChatMessages(prev => [...prev, errorMessage]);
       }
-
-      const aiMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: response,
-        timestamp: new Date(),
-      };
-      setChatMessages(prev => [...prev, aiMessage]);
-    }, 1000);
+    } else if (datasetParser) {
+      // Fallback to dataset parser if AI service is not available
+      setTimeout(() => {
+        const answer = datasetParser.findAnswer(chatInput);
+        const response = answer || "I couldn't find specific information about that. Please try asking in a different way.";
+        
+        const aiMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: response,
+          timestamp: new Date(),
+        };
+        setChatMessages(prev => [...prev, aiMessage]);
+      }, 1000);
+    } else {
+      // Fallback message if neither service is available
+      setTimeout(() => {
+        const aiMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "I'm still loading my knowledge base. Please wait a moment and try again.",
+          timestamp: new Date(),
+        };
+        setChatMessages(prev => [...prev, aiMessage]);
+      }, 1000);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -178,14 +208,16 @@ const Landing = () => {
           <div className="max-w-2xl mx-auto mt-12">
             <Card className="border-border/50">
               <CardContent className="p-4">
-                <h3 className="text-base font-semibold text-foreground mb-3">Ask about M873</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <Bot className="w-4 h-4 text-primary" />
+                  <h3 className="text-base font-semibold text-foreground">Ask about M873</h3>
+                </div>
                 
                 {/* Chat Messages */}
                 <div className="h-32 overflow-y-auto border rounded-lg p-3 mb-3 bg-muted/30">
                   {chatMessages.length === 0 ? (
-                    <div className="text-muted-foreground text-center py-4 text-sm flex items-center justify-center gap-2">
-                      <Bot className="w-4 h-4" />
-                      <span>Asked about M873.</span>
+                    <div className="text-muted-foreground text-center py-4 text-sm">
+                      <span>Start a conversation...</span>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -194,9 +226,9 @@ const Landing = () => {
                           <div className={`flex items-start gap-2 max-w-xs ${message.role === "user" ? "flex-row-reverse" : ""}`}>
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center ${message.role === "user" ? "bg-primary" : "bg-muted"}`}>
                               {message.role === "user" ? (
-                                <User className="w-3 h-3 text-primary-foreground" />
+                                <User className="w-4 h-4 text-primary-foreground" />
                               ) : (
-                                <Logo className="w-3 h-3" />
+                                <Logo className="w-4 h-4" />
                               )}
                             </div>
                             <div className={`rounded-lg px-2 py-1 text-xs ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
@@ -217,7 +249,7 @@ const Landing = () => {
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="🤖 Asked about M873."
+                    placeholder="Ask me about M873..."
                     className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <Button onClick={handleSendMessage} size="sm">

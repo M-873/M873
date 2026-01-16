@@ -75,7 +75,7 @@ export class DatasetParser {
     // Detect language of the question
     const isBengali = this.detectLanguage(userQuestionLower) === 'BN';
     
-    // Enhanced greeting responses in both languages
+    // Enhanced greeting responses in both languages with natural M873 connection
     const greetings = {
       'EN': ['hi', 'hello', 'hey', 'greetings', 'assalamualaikum', 'good morning', 'good afternoon', 'good evening'],
       'BN': ['সালাম', 'হ্যালো', 'হাই', 'নমস্কার', 'আসসালামুয়ালাইকুম', 'সুপ্রভাত', 'শুভ অপরাহ্ন', 'শুভ সন্ধ্যা']
@@ -83,11 +83,25 @@ export class DatasetParser {
     
     if (greetings['EN'].some(g => userQuestionLower.includes(g)) || greetings['BN'].some(g => userQuestionLower.includes(g))) {
       return isBengali 
-        ? "হ্যালো! আমি M873 সহকারী। আমি কিভাবে আপনাকে সাহায্য করতে পারি?"
-        : "Hello! I'm M873 Assistant. How can I help you today?";
+        ? `হ্যালো! আমি M873 সহকারী। আমি কিভাবে সাহায্য করতে পারি?
+
+আপনি যদি M873 সম্পর্কে জানতে চান:
+• এটি একটি AI শেখার প্ল্যাটফর্ম
+• Md. Mahfuzul Islam দ্বারা তৈরি
+• ঢাকা, বাংলাদেশ থেকে পরিচালিত
+
+আপনার কি কোনো নির্দিষ্ট প্রশ্ন আছে?`
+        : `Hello! I'm M873 Assistant. How can I help you today?
+
+If you're interested in M873:
+• It's an AI learning platform
+• Created by Md. Mahfuzul Islam
+• Operated from Dhaka, Bangladesh
+
+Do you have any specific questions?`;
     }
 
-    // Enhanced name questions in both languages
+    // Enhanced name questions in both languages with natural introduction
     const nameQuestions = {
       'EN': ['what is your name', 'who are you', 'what should I call you', 'your name'],
       'BN': ['তোমার নাম কি', 'তুমি কে', 'আপনার নাম কি', 'তোমার পরিচয়']
@@ -96,8 +110,22 @@ export class DatasetParser {
     const nameMatches = [...nameQuestions['EN'], ...nameQuestions['BN']];
     if (nameMatches.some(q => userQuestionLower.includes(q))) {
       return isBengali
-        ? "আমি M873 সহকারী, M873 প্ল্যাটফর্মের জন্য আপনার সহায়ক এআই সঙ্গী!"
-        : "I'm M873 Assistant, your helpful AI companion for M873 platform!";
+        ? `আমি M873 সহকারী। আমি M873 প্ল্যাটফর্মের জন্য তৈরি একটি এআই সহকারী।
+
+আমি সাহায্য করতে পারি:
+• M873 সম্পর্কে তথ্য
+• প্ল্যাটফর্মের বৈশিষ্ট্য
+• ব্যবহার নির্দেশনা
+
+আপনার কি কিছু জানতে চান?`
+        : `I'm M873 Assistant. I'm an AI assistant created for the M873 platform.
+
+I can help with:
+• Information about M873
+• Platform features
+• Usage guidance
+
+Is there something you'd like to know?`;
     }
 
     // Enhanced M873 introduction in both languages
@@ -109,8 +137,82 @@ export class DatasetParser {
     const m873Matches = [...m873Questions['EN'], ...m873Questions['BN']];
     if (m873Matches.some(q => userQuestionLower.includes(q))) {
       return isBengali
-        ? "M873 একটি আধুনিক প্ল্যাটফর্ম যা নিরাপদ অ্যাক্সেস এবং ভবিষ্যত-প্রস্তুত বৈশিষ্ট্যগুলির সাথে তৈরি করা হয়েছে, Md. Mahfuzul Islam দ্বারা তৈরি।"
-        : "M873 is a modern platform with secure access and future-ready features, created by Md. Mahfuzul Islam.";
+        ? `M873 একটি আধুনিক প্ল্যাটফর্ম যা নিরাপদ অ্যাক্সেস এবং ভবিষ্যত-প্রস্তুত বৈশিষ্ট্যগুলির সাথে তৈরি করা হয়েছে। 
+
+M873 সম্পর্কে বিস্তারিত:
+• নির্মাতা: Md. Mahfuzul Islam
+• অবস্থান: ঢাকা, বাংলাদেশ
+• বিশেষত্ব: AI শেখা এবং প্রশিক্ষণের সহজ সমাধান
+• লক্ষ্য: ব্যবহারকারীদের জন্য নিরাপদ এবং আধুনিক প্ল্যাটফর্ম প্রদান
+
+M873 এর আরও কোন বৈশিষ্ট্য জানতে চান?`
+        : `M873 is a modern platform with secure access and future-ready features, created by Md. Mahfuzul Islam from Dhaka, Bangladesh.
+
+About M873:
+• Creator: Md. Mahfuzul Islam
+• Location: Dhaka, Bangladesh
+• Specialty: Simple AI learning and training solutions
+• Goal: Provide secure and modern platform for users
+
+What specific M873 feature would you like to know more about?`;
+    }
+
+    // Enhanced owner questions in both languages
+    const ownerQuestions = {
+      'EN': ['who is the owner', 'who owns m873', 'm873 owner', 'owner of m873', 'who created m873'],
+      'BN': ['মালিক কে', 'm873 এর মালিক কে', 'm873 কে তৈরি করেছে', 'm873 এর মালিক', 'm873 কার']
+    };
+    
+    const ownerMatches = [...ownerQuestions['EN'], ...ownerQuestions['BN']];
+    if (ownerMatches.some(q => userQuestionLower.includes(q))) {
+      return isBengali
+        ? `M873 প্ল্যাটফর্মের মালিক এবং নির্মাতা হলেন Md. Mahfuzul Islam। 
+
+তাঁর সম্পর্কে:
+• তিনি Northern University Bangladesh-এর ইলেকট্রিক্যাল এবং ইলেকট্রনিক ইঞ্জিনিয়ারিং বিভাগের ছাত্র
+• তিনি ঢাকা, বাংলাদেশ থেকে
+• তিনি AI এবং প্রযুক্তি সমাধানে বিশেষজ্ঞ
+• M873 একটি আধুনিক প্ল্যাটফর্ম যা তিনি তৈরি করেছেন
+
+Md. Mahfuzul Islam সম্পর্কে আরও জানতে চান?`
+        : `The owner and creator of M873 platform is Md. Mahfuzul Islam.
+
+About him:
+• He is a student of Electrical and Electronic Engineering at Northern University Bangladesh
+• He is from Dhaka, Bangladesh
+• He is an expert in AI and technology solutions
+• M873 is a modern platform that he has created
+
+Would you like to know more about Md. Mahfuzul Islam's work with M873?`;
+    }
+
+    // Enhanced country/location questions in both languages
+    const countryQuestions = {
+      'EN': ['where is m873 from', 'which country', 'location', 'where is it based', 'country of origin'],
+      'BN': ['কোন দেশ', 'কোথায়', 'অবস্থান', 'দেশ', 'কোন দেশের']
+    };
+    
+    const countryMatches = [...countryQuestions['EN'], ...countryQuestions['BN']];
+    if (countryMatches.some(q => userQuestionLower.includes(q))) {
+      return isBengali
+        ? `M873 প্ল্যাটফর্মটি বাংলাদেশ থেকে, বিশেষ করে ঢাকা শহর থেকে পরিচালিত হয়। 
+
+বাংলাদেশে M873:
+• এটি একটি আধুনিক বাংলাদেশি প্রযুক্তি প্ল্যাটফর্ম
+• নির্মাতা Md. Mahfuzul Islam ঢাকায় অবস্থিত
+• এটি বাংলাদেশের প্রযুক্তি খাতে একটি উল্লেখযোগ্য অবদান
+• M873 AI সমাধান বাংলাদেশি ব্যবহারকারীদের জন্য তৈরি
+
+বাংলাদেশে M873 এর ভবিষ্যৎ পরিকল্পনা সম্পর্কে জানতে চান?`
+        : `M873 platform is based in Bangladesh, specifically operating from Dhaka city.
+
+M873 in Bangladesh:
+• It's a modern Bangladeshi technology platform
+• Creator Md. Mahfuzul Islam is located in Dhaka
+• It's a significant contribution to Bangladesh's tech sector
+• M873 AI solutions are designed for Bangladeshi users
+
+Would you like to know about M873's future plans in Bangladesh?`;
     }
 
     // Search through the dataset with language preference

@@ -4,7 +4,10 @@ import "./index.css";
 import { suppressAllGitHubTrackingErrors } from "./utils/githubStatsSuppressor.ts";
 
 // 🛠️ GitHub Stats Error Suppression - Auto-fix for harmless API error
-suppressAllGitHubTrackingErrors();
+// Only enable in production to avoid interfering with Vite development
+if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+  suppressAllGitHubTrackingErrors();
+}
 
 // GitHub Pages SPA Router Fix
 // This handles the redirect from 404.html and updates the browser history

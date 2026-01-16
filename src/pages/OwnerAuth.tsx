@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Shield } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useOwnerAuth } from "@/hooks/useOwnerAuth";
+import { sendOTPEmail } from "@/utils/emailService";
 
 const OwnerAuth = () => {
   const navigate = useNavigate();
@@ -23,10 +24,33 @@ const OwnerAuth = () => {
   const ALLOWED_PASSWORD = "mahfugul873";
 
   useEffect(() => {
+    console.log("OwnerAuth useEffect:", { loading, isOwner });
     if (!loading && isOwner) {
+      console.log("Redirecting to dashboard because user is owner");
       navigate("/owner/dashboard");
     }
   }, [isOwner, loading, navigate]);
+
+  // Test Supabase connection
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        console.log("Testing Supabase connection...");
+        console.log("Supabase URL:", import.meta.env.VITE_SUPABASE_URL);
+        console.log("Supabase Key exists:", !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+        
+        const { data, error } = await supabase.from('features').select('id').limit(1);
+        console.log("Supabase connection test:", { data, error });
+        
+        // Test auth
+        const { data: authData, error: authError } = await supabase.auth.getSession();
+        console.log("Auth session test:", { authData, authError });
+      } catch (err) {
+        console.error("Supabase connection failed:", err);
+      }
+    };
+    testConnection();
+  }, []);
 
   const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -37,16 +61,38 @@ const OwnerAuth = () => {
     setGeneratedOtp(otpCode);
     
     try {
-      // In a real implementation, you would send this via email service
-      // For now, we'll show it in console and toast for development
-      console.log(`OTP for ${email}: ${otpCode}`);
+      console.log(`Sending OTP ${otpCode} to ${email}...`);
       
-      // Simulate email sending
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Store OTP in Supabase with expiration
+      const { error: storeError } = await supabase
+        .from('user_otps')
+        .insert({
+          email: email,
+          otp: otpCode,
+          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
+          used: false,
+        });
       
+      if (storeError) {
+        console.error("Error storing OTP:", storeError);
+        toast.error("Failed to send OTP");
+        return;
+      }
+      
+      // Send OTP via email service
+      const emailResult = await sendOTPEmail(email, otpCode);
+      
+      if (!emailResult.success) {
+        console.error("Error sending email:", emailResult.error);
+        toast.error("Failed to send OTP email");
+        return;
+      }
+      
+      console.log("OTP stored and email sent successfully");
       toast.success("OTP sent to your email!");
       setShowOtp(true);
     } catch (error) {
+      console.error("Failed to send OTP:", error);
       toast.error("Failed to send OTP");
     }
   };
@@ -56,32 +102,72 @@ const OwnerAuth = () => {
     setIsLoading(true);
 
     try {
+      console.log("Owner login attempt:", { email, password, showOtp, otp });
+      
       if (email !== ALLOWED_EMAIL || password !== ALLOWED_PASSWORD) {
+        console.log("Invalid credentials:", { email: email !== ALLOWED_EMAIL, password: password !== ALLOWED_PASSWORD });
         toast.error("Invalid owner credentials");
         return;
       }
 
       if (!showOtp) {
         // First step: Send OTP
+        console.log("Sending OTP...");
         await sendOTP();
         setIsLoading(false);
         return;
       }
 
-      // Second step: Verify OTP and sign in
-      if (otp !== generatedOtp) {
+      // Second step: Verify OTP against database
+      console.log("Verifying OTP against database:", { enteredOtp: otp, email });
+      
+      // Check if OTP exists and is valid
+      const { data: otpData, error: otpError } = await supabase
+        .from('user_otps')
+        .select('otp, expires_at, used')
+        .eq('email', email)
+        .eq('used', false)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (otpError || !otpData || otpData.length === 0) {
+        console.log("No valid OTP found");
+        toast.error("Invalid or expired OTP");
+        return;
+      }
+      
+      const latestOtp = otpData[0];
+      if (otp !== latestOtp.otp) {
+        console.log("OTP mismatch");
         toast.error("Invalid OTP");
         return;
       }
+      
+      // Mark OTP as used
+      const { error: updateError } = await supabase
+        .from('user_otps')
+        .update({ used: true })
+        .eq('email', email)
+        .eq('otp', otp);
+      
+      if (updateError) {
+        console.error("Error marking OTP as used:", updateError);
+      }
 
+      console.log("Attempting Supabase signin...");
       let { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log("Supabase signin result:", { data, error });
+
       if (error) {
         const msg = error instanceof Error ? error.message : String(error);
+        console.log("Signin error:", msg);
         if (msg.toLowerCase().includes("invalid login credentials")) {
+          console.log("Attempting signup...");
           const { error: signupError } = await supabase.auth.signUp({
             email,
             password,
@@ -101,6 +187,7 @@ const OwnerAuth = () => {
         }
       }
 
+      console.log("Checking user role for:", data.user.id);
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
@@ -108,15 +195,41 @@ const OwnerAuth = () => {
         .eq("role", "owner")
         .maybeSingle();
 
-      if (!roleData && email !== ALLOWED_EMAIL) {
-        await supabase.auth.signOut();
-        toast.error("Access denied. You are not an owner.");
-        return;
+      console.log("Role check result:", roleData);
+
+      if (!roleData) {
+        console.log("No owner role found, checking if allowed email...");
+        // If no role data but it's the allowed email, create the owner role
+        if (email === ALLOWED_EMAIL) {
+          console.log("Creating owner role for allowed email...");
+          try {
+            const { error: roleError } = await supabase
+              .from("user_roles")
+              .insert({ user_id: data.user.id, role: "owner" });
+            
+            if (roleError) {
+              console.error("Error creating owner role:", roleError);
+              toast.error("Failed to create owner role");
+              return;
+            }
+            console.log("Owner role created successfully");
+          } catch (roleErr) {
+            console.error("Error creating owner role:", roleErr);
+            toast.error("Failed to create owner role");
+            return;
+          }
+        } else {
+          console.log("Access denied - not an owner");
+          await supabase.auth.signOut();
+          toast.error("Access denied. You are not an owner.");
+          return;
+        }
       }
 
       toast.success("Signed in as owner!");
       navigate("/owner/dashboard");
     } catch (error) {
+      console.error("Owner login error:", error);
       const message =
         error instanceof Error ? error.message : "Failed to sign in";
       toast.error(message);

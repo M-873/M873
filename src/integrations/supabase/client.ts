@@ -3,7 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
+
+console.log("Supabase config:", { 
+  URL: SUPABASE_URL, 
+  hasKey: !!SUPABASE_PUBLISHABLE_KEY && SUPABASE_PUBLISHABLE_KEY !== 'placeholder-key',
+  keyLength: SUPABASE_PUBLISHABLE_KEY?.length 
+});
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
