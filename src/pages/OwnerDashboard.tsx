@@ -59,6 +59,7 @@ const OwnerDashboard = () => {
   const [isDatasetLoading, setIsDatasetLoading] = useState(false);
 
   useEffect(() => {
+    console.log("OwnerDashboard auth check:", { loading, isOwner, user: user?.email });
     if (!loading && !isOwner) {
       toast.error("Access denied. Owners only.");
       navigate("/owner/login");
@@ -140,29 +141,47 @@ const OwnerDashboard = () => {
     }
 
     try {
+      console.log("Saving feature:", {
+        title: featureTitle,
+        description: featureDescription,
+        link: featureLink,
+        isEditing: !!editingFeature,
+        user: user?.email,
+        isOwner
+      });
+
       if (editingFeature) {
-        const { error } = await supabase
+        console.log("Updating existing feature:", editingFeature.id);
+        const updateData = {
+          title: featureTitle,
+          description: featureDescription || null,
+          link: featureLink || null,
+        };
+        console.log("Update data:", updateData);
+        const { error, data } = await supabase
           .from("features")
-          .update({
-            title: featureTitle,
-            description: featureDescription || null,
-            link: featureLink || null,
-          })
+          .update(updateData)
           .eq("id", editingFeature.id);
 
+        console.log("Update result:", { error, data });
         if (error) throw error;
         toast.success("Feature updated!");
       } else {
         const maxOrder = features.length > 0 ? Math.max(...features.map(f => f.sort_order || 0)) : 0;
-        const { error } = await supabase
+        console.log("Inserting new feature with sort_order:", maxOrder + 1);
+        const insertData = {
+          title: featureTitle,
+          description: featureDescription || null,
+          link: featureLink || null,
+          sort_order: maxOrder + 1,
+          status: 'upcoming'
+        };
+        console.log("Insert data:", insertData);
+        const { error, data } = await supabase
           .from("features")
-          .insert({
-            title: featureTitle,
-            description: featureDescription || null,
-            link: featureLink || null,
-            sort_order: maxOrder + 1,
-          });
+          .insert(insertData);
 
+        console.log("Insert result:", { error, data });
         if (error) throw error;
         toast.success("Feature added!");
       }
@@ -174,7 +193,36 @@ const OwnerDashboard = () => {
       setIsFeatureDialogOpen(false);
       fetchData();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save feature");
+      console.error("Full error details:", error);
+      let errorMessage = "Failed to save feature";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null && 'message' in error) {
+        errorMessage = String(error.message);
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      // Check for common Supabase errors with more specific patterns
+      if (errorMessage.includes('JWT') || errorMessage.includes('auth')) {
+        errorMessage = "Authentication error - please log in again";
+      } else if (errorMessage.includes('RLS') || errorMessage.includes('permission') || errorMessage.includes('403')) {
+        errorMessage = "Permission denied - you don't have owner privileges";
+      } else if (errorMessage.includes('duplicate') || errorMessage.includes('unique')) {
+        errorMessage = "Feature with this title already exists";
+      } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+        errorMessage = "Network error - please check your connection";
+      } else if (errorMessage.includes('timeout')) {
+        errorMessage = "Request timeout - please try again";
+      }
+      
+      // If it's still the generic message, add more context
+      if (errorMessage === "Failed to save feature") {
+        errorMessage += " - Check console for details";
+      }
+      
+      toast.error(errorMessage);
     }
   };
 
@@ -257,7 +305,7 @@ const OwnerDashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center">
         <div className="text-center">
-          <Logo className="w-16 h-16 mx-auto mb-4" colorMode="animated-fire" blink={true} />
+          <Logo className="w-16 h-16 mx-auto mb-4" colorMode="rainbow" blink={true} />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -283,7 +331,7 @@ const OwnerDashboard = () => {
               >
                 <ArrowLeft className="w-4 h-4" />
               </Button>
-              <Logo className="w-8 h-8" colorMode="animated-fire" blink={true} />
+              <Logo className="w-8 h-8" colorMode="rainbow" blink={true} />
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
                 <span className="text-lg font-bold text-white">Owner Dashboard</span>

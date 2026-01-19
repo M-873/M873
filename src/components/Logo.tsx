@@ -1,4 +1,4 @@
-const Logo = ({ className = "w-10 h-10", colorMode = "gradient", blink = false }: { className?: string, colorMode?: "gradient" | "rainbow" | "blue" | "red" | "green" | "purple" | "gold" | "silver" | "neon" | "fire" | "ocean" | "animated-gold" | "animated-silver" | "animated-neon" | "animated-fire" | "animated-ocean", blink?: boolean }) => {
+const Logo = ({ className = "w-10 h-10", colorMode = "gradient", blink = false }: { className?: string, colorMode?: "gradient" | "rainbow" | "blue" | "red" | "green" | "purple" | "gold" | "silver" | "neon" | "fire" | "ocean" | "animated-gold" | "animated-silver" | "animated-neon" | "animated-fire" | "animated-ocean" | "google", blink?: boolean }) => {
   const getGradientStops = () => {
     switch (colorMode) {
       case "rainbow":
@@ -76,6 +76,16 @@ const Logo = ({ className = "w-10 h-10", colorMode = "gradient", blink = false }
             <stop offset="100%" style={{ stopColor: "#00bfff", stopOpacity: 1 }} />
           </>
         );
+      case "google":
+        return (
+          <>
+            <stop offset="0%" style={{ stopColor: "#4285f4", stopOpacity: 1 }} />
+            <stop offset="25%" style={{ stopColor: "#34a853", stopOpacity: 1 }} />
+            <stop offset="50%" style={{ stopColor: "#fbbc04", stopOpacity: 1 }} />
+            <stop offset="75%" style={{ stopColor: "#ea4335", stopOpacity: 1 }} />
+            <stop offset="100%" style={{ stopColor: "#4285f4", stopOpacity: 1 }} />
+          </>
+        );
       default:
         return (
           <>
@@ -98,6 +108,8 @@ const Logo = ({ className = "w-10 h-10", colorMode = "gradient", blink = false }
         return "#10b981";
       case "purple":
         return "#8b5cf6";
+      case "google":
+        return "url(#logoGradient)";
       default:
         return "#ffd700";
     }
@@ -115,6 +127,8 @@ const Logo = ({ className = "w-10 h-10", colorMode = "gradient", blink = false }
         return "#10b981";
       case "purple":
         return "#8b5cf6";
+      case "google":
+        return "url(#logoGradient)";
       default:
         return "#ffd700";
     }
@@ -125,6 +139,7 @@ const Logo = ({ className = "w-10 h-10", colorMode = "gradient", blink = false }
       viewBox="0 0 100 100"
       className={`${className} animate-logo-flash ${
          colorMode === "rainbow" ? "logo-color-cycle" :
+         colorMode === "google" ? "logo-google" :
          colorMode === "animated-gold" ? "logo-animated-gold" :
          colorMode === "animated-silver" ? "logo-animated-silver" :
          colorMode === "animated-neon" ? "logo-animated-neon" :

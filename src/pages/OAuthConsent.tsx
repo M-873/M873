@@ -11,7 +11,7 @@ const OAuthConsent = () => {
       <Card className="w-full max-w-md border-border/50 shadow-xl">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <Logo className="w-12 h-12" blink={true} />
+            <Logo className="w-12 h-12" colorMode="rainbow" blink={true} />
           </div>
           <CardTitle className="text-2xl font-bold text-primary">
             OAuth Consent

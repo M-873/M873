@@ -230,7 +230,7 @@ const OwnerAuth = () => {
 
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Logo className="w-12 h-12" blink={true} />
+            <Logo className="w-12 h-12" colorMode="rainbow" blink={true} />
           </div>
           <div className="flex items-center justify-center gap-2">
             <Shield className="w-5 h-5 text-primary" />

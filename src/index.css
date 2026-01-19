@@ -217,6 +217,14 @@ All colors MUST be HSL.
   100% { stop-color: #34c759; }
 }
 
+@keyframes logo-google-cycle {
+  0% { stop-color: #4285f4; }
+  25% { stop-color: #34a853; }
+  50% { stop-color: #fbbc04; }
+  75% { stop-color: #ea4335; }
+  100% { stop-color: #4285f4; }
+}
+
 .logo-color-cycle .logo-stop-1 {
   animation: logo-color-cycle-1 6s linear infinite;
   stop-opacity: 1;
@@ -227,7 +235,20 @@ All colors MUST be HSL.
   stop-opacity: 1;
 }
 
+.logo-google .logo-stop-1,
+.logo-google .logo-stop-2 {
+  animation: logo-google-cycle 4s linear infinite;
+  stop-opacity: 1;
+}
+
 /* Additional color themes */
+.logo-google {
+  --logo-blue: #4285f4;
+  --logo-green: #34a853;
+  --logo-yellow: #fbbc04;
+  --logo-red: #ea4335;
+}
+
 .logo-gold {
   --logo-primary: #ffd700;
   --logo-secondary: #ffb347;
