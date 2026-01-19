@@ -16,6 +16,7 @@ import FloatingParticles from "./components/FloatingParticles";
 import Auth from "./pages/Auth";
 import OAuthConsent from "./pages/OAuthConsent";
 import LogoColorDemo from "./components/LogoColorDemo";
+import DebugAuth from "./pages/DebugAuth";
 
 const queryClient = new QueryClient();
 const basename = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/owner/dashboard" element={<OwnerDashboard />} />
           <Route path="/oauth/consent" element={<OAuthConsent />} />
           <Route path="/logo-colors" element={<LogoColorDemo />} />
+          <Route path="/debug/auth" element={<DebugAuth />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

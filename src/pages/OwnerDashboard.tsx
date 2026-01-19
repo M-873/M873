@@ -43,6 +43,7 @@ const OwnerDashboard = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [hasFetchedData, setHasFetchedData] = useState(false);
 
   // Feature form state
   const [featureTitle, setFeatureTitle] = useState("");
@@ -67,11 +68,13 @@ const OwnerDashboard = () => {
   }, [loading, isOwner, navigate]);
 
   useEffect(() => {
-    if (isOwner) {
+    if (isOwner && !hasFetchedData) {
+      // Only fetch data once when owner status is confirmed
+      setHasFetchedData(true);
       fetchData();
       loadDataset();
     }
-  }, [isOwner]);
+  }, [isOwner, hasFetchedData]);
 
   const fetchData = async () => {
     setIsLoadingData(true);
@@ -82,8 +85,13 @@ const OwnerDashboard = () => {
         .select("*")
         .order("sort_order", { ascending: true });
 
-      if (featuresError) throw featuresError;
-      setFeatures(featuresData || []);
+      if (featuresError) {
+        console.error("[OwnerDashboard] Features fetch error:", featuresError);
+        toast.error(`Failed to fetch features: ${featuresError.message}`);
+        // Don't throw, continue with empty data
+      } else {
+        setFeatures(featuresData || []);
+      }
 
       // Fetch profiles (all users)
       const { data: profilesData, error: profilesError } = await supabase
@@ -91,18 +99,33 @@ const OwnerDashboard = () => {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (profilesError) throw profilesError;
-      setProfiles(profilesData || []);
+      if (profilesError) {
+        console.error("[OwnerDashboard] Profiles fetch error:", profilesError);
+        toast.error(`Failed to fetch profiles: ${profilesError.message}`);
+        // Don't throw, continue with empty data
+      } else {
+        setProfiles(profilesData || []);
+      }
 
       // Fetch user roles
       const { data: rolesData, error: rolesError } = await supabase
         .from("user_roles")
         .select("user_id, role");
 
-      if (rolesError) throw rolesError;
-      setUserRoles(rolesData || []);
+      if (rolesError) {
+        console.error("[OwnerDashboard] User roles fetch error:", rolesError);
+        toast.error(`Failed to fetch user roles: ${rolesError.message}`);
+        // Don't throw, continue with empty data
+      } else {
+        setUserRoles(rolesData || []);
+      }
     } catch (error) {
+      console.error("[OwnerDashboard] Unexpected error in fetchData:", error);
       toast.error(error instanceof Error ? error.message : "Failed to load data");
+      // Continue with empty data on any unexpected error
+      setFeatures([]);
+      setProfiles([]);
+      setUserRoles([]);
     } finally {
       setIsLoadingData(false);
     }
