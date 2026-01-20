@@ -43,7 +43,6 @@ const OwnerDashboard = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [hasFetchedData, setHasFetchedData] = useState(false);
 
   // Feature form state
   const [featureTitle, setFeatureTitle] = useState("");
@@ -60,7 +59,6 @@ const OwnerDashboard = () => {
   const [isDatasetLoading, setIsDatasetLoading] = useState(false);
 
   useEffect(() => {
-    console.log("OwnerDashboard auth check:", { loading, isOwner, user: user?.email });
     if (!loading && !isOwner) {
       toast.error("Access denied. Owners only.");
       navigate("/owner/login");
@@ -68,13 +66,11 @@ const OwnerDashboard = () => {
   }, [loading, isOwner, navigate]);
 
   useEffect(() => {
-    if (isOwner && !hasFetchedData) {
-      // Only fetch data once when owner status is confirmed
-      setHasFetchedData(true);
+    if (isOwner) {
       fetchData();
       loadDataset();
     }
-  }, [isOwner, hasFetchedData]);
+  }, [isOwner]);
 
   const fetchData = async () => {
     setIsLoadingData(true);
@@ -85,13 +81,8 @@ const OwnerDashboard = () => {
         .select("*")
         .order("sort_order", { ascending: true });
 
-      if (featuresError) {
-        console.error("[OwnerDashboard] Features fetch error:", featuresError);
-        toast.error(`Failed to fetch features: ${featuresError.message}`);
-        // Don't throw, continue with empty data
-      } else {
-        setFeatures(featuresData || []);
-      }
+      if (featuresError) throw featuresError;
+      setFeatures(featuresData || []);
 
       // Fetch profiles (all users)
       const { data: profilesData, error: profilesError } = await supabase
@@ -99,33 +90,18 @@ const OwnerDashboard = () => {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (profilesError) {
-        console.error("[OwnerDashboard] Profiles fetch error:", profilesError);
-        toast.error(`Failed to fetch profiles: ${profilesError.message}`);
-        // Don't throw, continue with empty data
-      } else {
-        setProfiles(profilesData || []);
-      }
+      if (profilesError) throw profilesError;
+      setProfiles(profilesData || []);
 
       // Fetch user roles
       const { data: rolesData, error: rolesError } = await supabase
         .from("user_roles")
         .select("user_id, role");
 
-      if (rolesError) {
-        console.error("[OwnerDashboard] User roles fetch error:", rolesError);
-        toast.error(`Failed to fetch user roles: ${rolesError.message}`);
-        // Don't throw, continue with empty data
-      } else {
-        setUserRoles(rolesData || []);
-      }
+      if (rolesError) throw rolesError;
+      setUserRoles(rolesData || []);
     } catch (error) {
-      console.error("[OwnerDashboard] Unexpected error in fetchData:", error);
       toast.error(error instanceof Error ? error.message : "Failed to load data");
-      // Continue with empty data on any unexpected error
-      setFeatures([]);
-      setProfiles([]);
-      setUserRoles([]);
     } finally {
       setIsLoadingData(false);
     }
@@ -164,47 +140,29 @@ const OwnerDashboard = () => {
     }
 
     try {
-      console.log("Saving feature:", {
-        title: featureTitle,
-        description: featureDescription,
-        link: featureLink,
-        isEditing: !!editingFeature,
-        user: user?.email,
-        isOwner
-      });
-
       if (editingFeature) {
-        console.log("Updating existing feature:", editingFeature.id);
-        const updateData = {
-          title: featureTitle,
-          description: featureDescription || null,
-          link: featureLink || null,
-        };
-        console.log("Update data:", updateData);
-        const { error, data } = await supabase
+        const { error } = await supabase
           .from("features")
-          .update(updateData)
+          .update({
+            title: featureTitle,
+            description: featureDescription || null,
+            link: featureLink || null,
+          })
           .eq("id", editingFeature.id);
 
-        console.log("Update result:", { error, data });
         if (error) throw error;
         toast.success("Feature updated!");
       } else {
         const maxOrder = features.length > 0 ? Math.max(...features.map(f => f.sort_order || 0)) : 0;
-        console.log("Inserting new feature with sort_order:", maxOrder + 1);
-        const insertData = {
-          title: featureTitle,
-          description: featureDescription || null,
-          link: featureLink || null,
-          sort_order: maxOrder + 1,
-          status: 'upcoming'
-        };
-        console.log("Insert data:", insertData);
-        const { error, data } = await supabase
+        const { error } = await supabase
           .from("features")
-          .insert(insertData);
+          .insert({
+            title: featureTitle,
+            description: featureDescription || null,
+            link: featureLink || null,
+            sort_order: maxOrder + 1,
+          });
 
-        console.log("Insert result:", { error, data });
         if (error) throw error;
         toast.success("Feature added!");
       }
@@ -216,36 +174,7 @@ const OwnerDashboard = () => {
       setIsFeatureDialogOpen(false);
       fetchData();
     } catch (error) {
-      console.error("Full error details:", error);
-      let errorMessage = "Failed to save feature";
-      
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null && 'message' in error) {
-        errorMessage = String(error.message);
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      // Check for common Supabase errors with more specific patterns
-      if (errorMessage.includes('JWT') || errorMessage.includes('auth')) {
-        errorMessage = "Authentication error - please log in again";
-      } else if (errorMessage.includes('RLS') || errorMessage.includes('permission') || errorMessage.includes('403')) {
-        errorMessage = "Permission denied - you don't have owner privileges";
-      } else if (errorMessage.includes('duplicate') || errorMessage.includes('unique')) {
-        errorMessage = "Feature with this title already exists";
-      } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
-        errorMessage = "Network error - please check your connection";
-      } else if (errorMessage.includes('timeout')) {
-        errorMessage = "Request timeout - please try again";
-      }
-      
-      // If it's still the generic message, add more context
-      if (errorMessage === "Failed to save feature") {
-        errorMessage += " - Check console for details";
-      }
-      
-      toast.error(errorMessage);
+      toast.error(error instanceof Error ? error.message : "Failed to save feature");
     }
   };
 
@@ -328,7 +257,7 @@ const OwnerDashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center">
         <div className="text-center">
-          <Logo className="w-16 h-16 mx-auto mb-4" colorMode="rainbow" blink={true} />
+          <Logo className="w-16 h-16 mx-auto mb-4" colorMode="animated-fire" blink={true} />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -354,7 +283,7 @@ const OwnerDashboard = () => {
               >
                 <ArrowLeft className="w-4 h-4" />
               </Button>
-              <Logo className="w-8 h-8" colorMode="rainbow" blink={true} />
+              <Logo className="w-8 h-8" colorMode="animated-fire" blink={true} />
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
                 <span className="text-lg font-bold text-white">Owner Dashboard</span>

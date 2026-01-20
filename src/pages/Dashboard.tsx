@@ -46,7 +46,7 @@ const Dashboard = () => {
               <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="hover:bg-white/10 h-8 w-8">
                 <ArrowLeft className="w-4 h-4 text-white" />
               </Button>
-              <Logo className="w-8 h-8" colorMode="rainbow" blink={true} />
+              <Logo className="w-8 h-8" colorMode="ocean" blink={true} />
               <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent bg-secondary-foreground">M873</span>
             </div>
           </div>

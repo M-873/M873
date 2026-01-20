@@ -67,7 +67,7 @@ const Auth = () => {
       <Card className="w-full max-w-md border-border/50 shadow-xl">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <Logo className="w-16 h-16" colorMode="rainbow" blink={true} />
+            <Logo className="w-16 h-16" blink={true} />
           </div>
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             {isLogin ? "Welcome Back" : "Join M873"}

@@ -1,23 +1,30 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  base: process.env.NODE_ENV === 'production' ? '/M873/' : '/',
-  server: {
-    host: "::",
-    port: 8080,
-    hmr: {
-      port: 8080,
-      clientPort: 8080,
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
+    base: process.env.NODE_ENV === 'production' ? '/M873/' : '/',
+    server: {
+      host: "::",
+      port: 5173,
+      hmr: false, // Disable HMR temporarily to fix auto-reload
+      proxy: {
+        '/functions': {
+          target: env.VITE_SUPABASE_URL,
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
-  },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+    plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
     },
-  },
-}));
+  };
+});

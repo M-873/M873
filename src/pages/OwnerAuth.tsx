@@ -5,11 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { safeSignOut } from "@/lib/auth-helpers";
 import { toast } from "sonner";
 import { ArrowLeft, Shield } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useOwnerAuth } from "@/hooks/useOwnerAuth";
-import { sendOTPEmail } from "@/utils/emailService";
+import { generateOTP, verifyOTP } from "@/utils/otpServiceFallback";
 
 const OwnerAuth = () => {
   const navigate = useNavigate();
@@ -19,7 +20,6 @@ const OwnerAuth = () => {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [showOtp, setShowOtp] = useState(false);
-  const [generatedOtp] = useState("87345");
   const [timer, setTimer] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const ALLOWED_EMAIL = "mahfuzulislam873@gmail.com";
@@ -74,21 +74,30 @@ const OwnerAuth = () => {
 
   const sendOTP = async () => {
     try {
-      console.log(`Sending fake OTP ${generatedOtp} to ${email}...`);
+      setIsLoading(true);
+      console.log(`Sending real OTP to ${email}...`);
       
-      // Simulate OTP sending with a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Generate and send OTP using the new service
+      const result = await generateOTP(email);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to generate OTP');
+      }
+      
+      console.log("OTP generated successfully:", result);
       
       // Start 60-second timer
       setTimer(60);
       setTimerActive(true);
       
-      console.log("Fake OTP sent successfully");
       toast.success("OTP sent to your email!");
       setShowOtp(true);
+      
     } catch (error) {
       console.error("Failed to send OTP:", error);
       toast.error("Failed to send OTP");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -113,12 +122,14 @@ const OwnerAuth = () => {
         return;
       }
 
-      // Second step: Verify fake OTP
-      console.log("Verifying fake OTP:", { enteredOtp: otp, expectedOtp: generatedOtp });
+      // Second step: Verify real OTP
+      console.log("Verifying real OTP:", { enteredOtp: otp });
       
-      if (otp !== generatedOtp) {
-        console.log("OTP mismatch");
-        toast.error("Invalid OTP");
+      const verifyResult = await verifyOTP(email, otp);
+      
+      if (!verifyResult.success) {
+        console.log("OTP verification failed:", verifyResult.error);
+        toast.error(verifyResult.error || "Invalid OTP");
         return;
       }
       
@@ -129,7 +140,7 @@ const OwnerAuth = () => {
         return;
       }
 
-      console.log("Attempting Supabase signin...");
+      console.log("OTP verified successfully, attempting Supabase signin...");
       let { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -195,7 +206,7 @@ const OwnerAuth = () => {
         } else {
           console.log("Access denied - not an owner");
           try {
-            await supabase.auth.signOut({ scope: 'local' });
+            await safeSignOut();
           } catch (signOutError) {
             console.error("SignOut error during access denial:", signOutError);
           }
@@ -269,12 +280,12 @@ const OwnerAuth = () => {
                     <Input
                       id="otp"
                       type="text"
-                      placeholder="Enter 5-digit code"
+                      placeholder="Enter 6-digit code"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
                       required
-                      maxLength={5}
-                      pattern="[0-9]{5}"
+                      maxLength={6}
+                      pattern="[0-9]{6}"
                     />
                     <div className="flex justify-between items-center">
                       <p className="text-xs text-muted-foreground">

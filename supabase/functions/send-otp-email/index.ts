@@ -26,11 +26,13 @@ serve(async (req) => {
     )
 
     // Send email using Supabase's built-in email functionality
+    // We'll use the auth admin API to send a custom email
     const { error } = await supabaseClient.auth.admin.inviteUserByEmail(email, {
       redirectTo: `${Deno.env.get('SITE_URL')}/owner/login?otp=${otp}`,
       data: {
         otp: otp,
-        type: 'owner_login_otp'
+        type: 'owner_login_otp',
+        message: `Your owner login verification code is: ${otp}`
       }
     })
 

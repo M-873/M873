@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const LogoColorDemo = () => {
   const colorModes = [
     { name: "Default Gradient", mode: "gradient" as const },
-    { name: "Google Multicolor", mode: "google" as const },
     { name: "Rainbow Cycle", mode: "rainbow" as const },
     { name: "Blue Theme", mode: "blue" as const },
     { name: "Red Theme", mode: "red" as const },
