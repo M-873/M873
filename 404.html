@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Single Page Application for GitHub Pages</title>
+    <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
+      
+      // This script takes the current URL and converts the path and query
+      // string into just a query string, and then redirects the browser
+      // to the new URL with only a query string and hash fragment,
+      // e.g. https://www.foo.tld/one/two?a=b&c=d#qwe, becomes
+      // https://www.foo.tld/?p=/one/two&a=b~and~c=d#qwe
+      
+      // Since GitHub Pages only serves static files, this allows React Router
+      // to handle client-side routing correctly
+      
+      // Configuration for your specific repository
+      // pathSegmentsToKeep = 0 means: keep 0 path segments (for root access)
+      // This is correct for https://username.github.io/repository-name/
+      var pathSegmentsToKeep = 0;
+      
+      var l = window.location;
+      
+      // Check if we're already in the redirect format to avoid infinite loops
+      if (l.search.indexOf('?/') !== 0) {
+        l.replace(
+          l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+          l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+          l.pathname.slice(1).split('/').map(function (segment) {
+            return segment.replace(/&/g, '~and~');
+          }).join('/') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash
+        );
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
