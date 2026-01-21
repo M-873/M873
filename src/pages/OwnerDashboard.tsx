@@ -14,6 +14,7 @@ import { ArrowLeft, Plus, Pencil, Trash2, Users, LayoutGrid, LogOut, Shield, Dat
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
 import { DatasetParser, QAData } from "@/utils/datasetParser";
+import { getAvailableFeaturesColumns } from "@/utils/featuresSchemaUtils";
 
 interface Feature {
   id: string;
@@ -50,6 +51,7 @@ const OwnerDashboard = () => {
   const [featureLink, setFeatureLink] = useState("");
   const [editingFeature, setEditingFeature] = useState<Feature | null>(null);
   const [isFeatureDialogOpen, setIsFeatureDialogOpen] = useState(false);
+  const [availableColumns, setAvailableColumns] = useState<string[]>(['id', 'title', 'description', 'status', 'sort_order', 'created_at']);
   
   // Dataset management state
   const [datasetParser, setDatasetParser] = useState<DatasetParser | null>(null);
@@ -75,10 +77,18 @@ const OwnerDashboard = () => {
   const fetchData = async () => {
     setIsLoadingData(true);
     try {
-      // Fetch features
+      // Get available columns first
+      const columns = await getAvailableFeaturesColumns();
+      console.log("Available features columns:", columns);
+      setAvailableColumns(columns);
+
+      // Build select query with only available columns
+      const selectColumns = columns.join(', ');
+      
+      // Fetch features with only available columns
       const { data: featuresData, error: featuresError } = await supabase
         .from("features")
-        .select("*")
+        .select(selectColumns)
         .order("sort_order", { ascending: true });
 
       if (featuresError) throw featuresError;
@@ -140,14 +150,21 @@ const OwnerDashboard = () => {
     }
 
     try {
-      let saveData: any = {
+      // Build save data with only available columns
+      const saveData: Record<string, string | number | null> = {
         title: featureTitle,
         description: featureDescription || null,
       };
 
-      // Only include link if it's provided
-      if (featureLink?.trim()) {
+      // Only add link if the column exists and a value is provided
+      if (availableColumns.includes('link') && featureLink?.trim()) {
         saveData.link = featureLink;
+      }
+
+      // Add sort_order for new features
+      if (!editingFeature) {
+        const maxOrder = features.length > 0 ? Math.max(...features.map(f => f.sort_order || 0)) : 0;
+        saveData.sort_order = maxOrder + 1;
       }
 
       if (editingFeature) {
@@ -159,9 +176,6 @@ const OwnerDashboard = () => {
         if (error) throw error;
         toast.success("Feature updated!");
       } else {
-        const maxOrder = features.length > 0 ? Math.max(...features.map(f => f.sort_order || 0)) : 0;
-        saveData.sort_order = maxOrder + 1;
-        
         const { error } = await supabase
           .from("features")
           .insert(saveData);
@@ -172,22 +186,28 @@ const OwnerDashboard = () => {
 
       setFeatureTitle("");
       setFeatureDescription("");
-      setFeatureLink("");
+      if (availableColumns.includes('link')) {
+        setFeatureLink("");
+      }
       setEditingFeature(null);
       setIsFeatureDialogOpen(false);
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Feature save error:", error);
       
       // Handle specific error cases
-      if (error.code === '42501') {
-        toast.error("Permission denied. Please ensure you have owner privileges.");
-      } else if (error.code === 'PGRST204') {
-        toast.error("Database schema issue. Please contact support.");
-      } else if (error.message?.includes('row-level security')) {
-        toast.error("Access denied. Please log in as an owner.");
+      if (error instanceof Error) {
+        if ('code' in error && error.code === '42501') {
+          toast.error("Permission denied. Please ensure you have owner privileges.");
+        } else if ('code' in error && error.code === 'PGRST204') {
+          toast.error("Database schema issue. Please contact support.");
+        } else if (error.message?.includes('row-level security')) {
+          toast.error("Access denied. Please log in as an owner.");
+        } else {
+          toast.error(error.message || "Failed to save feature");
+        }
       } else {
-        toast.error(error instanceof Error ? error.message : "Failed to save feature");
+        toast.error("Failed to save feature");
       }
     }
   };
@@ -209,7 +229,10 @@ const OwnerDashboard = () => {
     setEditingFeature(feature);
     setFeatureTitle(feature.title);
     setFeatureDescription(feature.description || "");
-    setFeatureLink(feature.link || "");
+    // Only set link if the column exists
+    if (availableColumns.includes('link')) {
+      setFeatureLink(feature.link || "");
+    }
     setIsFeatureDialogOpen(true);
   };
 
@@ -217,7 +240,9 @@ const OwnerDashboard = () => {
     setEditingFeature(null);
     setFeatureTitle("");
     setFeatureDescription("");
-    setFeatureLink("");
+    if (availableColumns.includes('link')) {
+      setFeatureLink("");
+    }
     setIsFeatureDialogOpen(true);
   };
 
@@ -364,19 +389,21 @@ const OwnerDashboard = () => {
                         rows={3}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="link">Link (optional)</Label>
-                      <Input
-                        id="link"
-                        value={featureLink}
-                        onChange={(e) => setFeatureLink(e.target.value)}
-                        placeholder="https://example.com"
-                        type="url"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        When set, "View Details" will open this link
-                      </p>
-                    </div>
+                    {availableColumns.includes('link') && (
+                      <div className="space-y-2">
+                        <Label htmlFor="link">Link (optional)</Label>
+                        <Input
+                          id="link"
+                          value={featureLink}
+                          onChange={(e) => setFeatureLink(e.target.value)}
+                          placeholder="https://example.com"
+                          type="url"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          When set, "View Details" will open this link
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <DialogFooter>
                     <DialogClose asChild>
@@ -397,7 +424,7 @@ const OwnerDashboard = () => {
                     <TableRow>
                       <TableHead>Title</TableHead>
                       <TableHead>Description</TableHead>
-                      <TableHead>Link</TableHead>
+                      {availableColumns.includes('link') && <TableHead>Link</TableHead>}
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -409,13 +436,15 @@ const OwnerDashboard = () => {
                         <TableCell className="text-muted-foreground max-w-xs truncate">
                           {feature.description || "-"}
                         </TableCell>
-                        <TableCell className="text-muted-foreground max-w-xs truncate">
-                          {feature.link ? (
-                            <a href={feature.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                              {feature.link.length > 30 ? feature.link.substring(0, 30) + "..." : feature.link}
-                            </a>
-                          ) : "-"}
-                        </TableCell>
+                        {availableColumns.includes('link') && (
+                          <TableCell className="text-muted-foreground max-w-xs truncate">
+                            {feature.link ? (
+                              <a href={feature.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                {feature.link.length > 30 ? feature.link.substring(0, 30) + "..." : feature.link}
+                              </a>
+                            ) : "-"}
+                          </TableCell>
+                        )}
                         <TableCell>
                           <span className="inline-block px-2 py-1 rounded-full bg-primary/10 text-primary text-xs">
                             {feature.status || "upcoming"}
@@ -442,7 +471,7 @@ const OwnerDashboard = () => {
                     ))}
                     {features.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={availableColumns.includes('link') ? 5 : 4} className="text-center text-muted-foreground py-8">
                           No features yet. Add your first feature!
                         </TableCell>
                       </TableRow>
