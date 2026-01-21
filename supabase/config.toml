@@ -1,1 +1,30 @@
 project_id = "zxbydjiptihzsxucvynp"
+
+[auth]
+# Enable email provider
+enabled = true
+
+[auth.email]
+# Enable email confirmations
+enable_confirmations = false
+# OTP expiry time in seconds (30 minutes = 1800 seconds)
+otp_expiry = 1800
+# OTP length
+otp_length = 6
+# Max OTP attempts
+max_otp_attempts = 5
+# OTP cooldown in seconds
+otp_cooldown = 60
+
+[auth.email.template.otp]
+subject = "Your M873 Login Code"
+content_path = "./supabase/templates/otp.html"
+
+[auth.external.github]
+enabled = true
+client_id = "Ov23liubfHJBvMie4Y1Y"
+client_secret = "29d5ad8322c4a359d9dda217eccdf1fa3dfcc123"
+# Allow users to authenticate without email address
+allow_user_without_email = true
+# Redirect URL for OAuth callback
+redirect_uri = "https://zxbydjiptihzsxucvynp.supabase.co/auth/v1/callback"

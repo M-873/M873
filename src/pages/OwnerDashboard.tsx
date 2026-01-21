@@ -140,28 +140,31 @@ const OwnerDashboard = () => {
     }
 
     try {
+      let saveData: any = {
+        title: featureTitle,
+        description: featureDescription || null,
+      };
+
+      // Only include link if it's provided
+      if (featureLink?.trim()) {
+        saveData.link = featureLink;
+      }
+
       if (editingFeature) {
         const { error } = await supabase
           .from("features")
-          .update({
-            title: featureTitle,
-            description: featureDescription || null,
-            link: featureLink || null,
-          })
+          .update(saveData)
           .eq("id", editingFeature.id);
 
         if (error) throw error;
         toast.success("Feature updated!");
       } else {
         const maxOrder = features.length > 0 ? Math.max(...features.map(f => f.sort_order || 0)) : 0;
+        saveData.sort_order = maxOrder + 1;
+        
         const { error } = await supabase
           .from("features")
-          .insert({
-            title: featureTitle,
-            description: featureDescription || null,
-            link: featureLink || null,
-            sort_order: maxOrder + 1,
-          });
+          .insert(saveData);
 
         if (error) throw error;
         toast.success("Feature added!");
@@ -173,8 +176,19 @@ const OwnerDashboard = () => {
       setEditingFeature(null);
       setIsFeatureDialogOpen(false);
       fetchData();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save feature");
+    } catch (error: any) {
+      console.error("Feature save error:", error);
+      
+      // Handle specific error cases
+      if (error.code === '42501') {
+        toast.error("Permission denied. Please ensure you have owner privileges.");
+      } else if (error.code === 'PGRST204') {
+        toast.error("Database schema issue. Please contact support.");
+      } else if (error.message?.includes('row-level security')) {
+        toast.error("Access denied. Please log in as an owner.");
+      } else {
+        toast.error(error instanceof Error ? error.message : "Failed to save feature");
+      }
     }
   };
 

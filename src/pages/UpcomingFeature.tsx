@@ -18,14 +18,15 @@ const UpcomingFeature = () => {
   const [feature, setFeature] = useState<Feature | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Check auth status
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-      }
-    });
-  }, [navigate]);
+  // Remove auth requirement - make page public
+  // useEffect(() => {
+  //   // Check auth status
+  //   supabase.auth.getSession().then(({ data: { session } }) => {
+  //     if (!session) {
+  //       navigate("/auth");
+  //     }
+  //   });
+  // }, [navigate]);
 
   useEffect(() => {
     const fetchFeature = async () => {
@@ -82,7 +83,7 @@ const UpcomingFeature = () => {
               onClick={() => navigate("/dashboard")}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
+              View All Features
             </Button>
           </div>
         </CardContent>

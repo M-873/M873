@@ -59,11 +59,25 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error(`Failed to generate OTP: ${otpError.message}`)
     }
 
-    if (!otpData || !otpData[0]) {
+    if (!otpData) {
       throw new Error('No OTP data returned from database')
     }
 
-    const { otp, expires_at } = otpData[0]
+    // Handle both string and object returns
+    let otp: string;
+    let expires_at: string;
+    
+    if (typeof otpData === 'string') {
+      // Function returns just the OTP string
+      otp = otpData;
+      expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes from now
+    } else if (typeof otpData === 'object' && otpData[0]) {
+      // Function returns array with object
+      otp = otpData[0].otp;
+      expires_at = otpData[0].expires_at;
+    } else {
+      throw new Error('Unexpected OTP data format from database')
+    }
 
     // Create a custom email template
     const emailTemplate = {
