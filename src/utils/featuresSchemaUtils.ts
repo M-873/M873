@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 // Utility function to check if a column exists in the features table
 export const checkFeaturesColumnExists = async (columnName: string): Promise<boolean> => {
   try {

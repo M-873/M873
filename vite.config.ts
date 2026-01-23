@@ -10,8 +10,11 @@ export default defineConfig(({ mode }) => {
     base: process.env.NODE_ENV === 'production' ? '/M873/' : '/',
     server: {
       host: "::",
-      port: 5173,
-      hmr: false, // Disable HMR temporarily to fix auto-reload
+      port: 8080,
+      hmr: {
+        port: 8080,
+        clientPort: 8080,
+      },
       proxy: {
         '/functions': {
           target: env.VITE_SUPABASE_URL,

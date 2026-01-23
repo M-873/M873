@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 0 0% 100%;
     --foreground: 265 4% 12.9%;
 
     --card: 0 0% 100%;
@@ -199,129 +199,24 @@ All colors MUST be HSL.
 
 @keyframes logo-color-cycle-1 {
   0% { stop-color: #ff3b30; }
-  16% { stop-color: #ff9500; }
   33% { stop-color: #ffcc00; }
-  50% { stop-color: #34c759; }
-  66% { stop-color: #5ac8fa; }
-  83% { stop-color: #5856d6; }
+  66% { stop-color: #34c759; }
   100% { stop-color: #ff3b30; }
 }
 
 @keyframes logo-color-cycle-2 {
   0% { stop-color: #34c759; }
-  16% { stop-color: #5ac8fa; }
-  33% { stop-color: #5856d6; }
-  50% { stop-color: #ff3b30; }
-  66% { stop-color: #ff9500; }
-  83% { stop-color: #ffcc00; }
+  33% { stop-color: #ff3b30; }
+  66% { stop-color: #ffcc00; }
   100% { stop-color: #34c759; }
 }
 
 .logo-color-cycle .logo-stop-1 {
-  animation: logo-color-cycle-1 6s linear infinite;
+  animation: logo-color-cycle-1 4s linear infinite;
   stop-opacity: 1;
 }
 
 .logo-color-cycle .logo-stop-2 {
-  animation: logo-color-cycle-2 6s linear infinite;
-  stop-opacity: 1;
-}
-
-/* Additional color themes */
-.logo-gold {
-  --logo-primary: #ffd700;
-  --logo-secondary: #ffb347;
-}
-
-.logo-silver {
-  --logo-primary: #c0c0c0;
-  --logo-secondary: #808080;
-}
-
-.logo-neon {
-  --logo-primary: #00ff00;
-  --logo-secondary: #00ffff;
-  filter: drop-shadow(0 0 5px #00ff00) drop-shadow(0 0 10px #00ffff);
-}
-
-.logo-fire {
-  --logo-primary: #ff4500;
-  --logo-secondary: #ff8c00;
-}
-
-.logo-ocean {
-  --logo-primary: #1e90ff;
-  --logo-secondary: #00bfff;
-}
-
-/* Animated color themes */
-@keyframes logo-pulse-gold {
-  0%, 100% { stop-color: #ffd700; }
-  50% { stop-color: #ffb347; }
-}
-
-@keyframes logo-pulse-silver {
-  0%, 100% { stop-color: #c0c0c0; }
-  50% { stop-color: #808080; }
-}
-
-@keyframes logo-pulse-neon {
-  0%, 100% { stop-color: #00ff00; }
-  50% { stop-color: #00ffff; }
-}
-
-@keyframes logo-pulse-fire {
-  0%, 100% { stop-color: #ff4500; }
-  50% { stop-color: #ff8c00; }
-}
-
-@keyframes logo-pulse-ocean {
-  0%, 100% { stop-color: #1e90ff; }
-  50% { stop-color: #00bfff; }
-}
-
-/* Blinking animation for logos */
-@keyframes logo-blink {
-  0%, 90%, 100% {
-    opacity: 1;
-    filter: brightness(1);
-  }
-  95% {
-    opacity: 0.3;
-    filter: brightness(0.5);
-  }
-}
-
-.logo-blink {
-  animation: logo-blink 1.5s ease-in-out infinite;
-}
-
-.logo-animated-gold .logo-stop-1,
-.logo-animated-gold .logo-stop-2 {
-  animation: logo-pulse-gold 2s ease-in-out infinite;
-  stop-opacity: 1;
-}
-
-.logo-animated-silver .logo-stop-1,
-.logo-animated-silver .logo-stop-2 {
-  animation: logo-pulse-silver 2s ease-in-out infinite;
-  stop-opacity: 1;
-}
-
-.logo-animated-neon .logo-stop-1,
-.logo-animated-neon .logo-stop-2 {
-  animation: logo-pulse-neon 1s ease-in-out infinite;
-  stop-opacity: 1;
-}
-
-.logo-animated-fire .logo-stop-1,
-.logo-animated-fire .logo-stop-2 {
-  animation: logo-pulse-fire 1.5s ease-in-out infinite;
-  stop-opacity: 1;
-}
-
-.logo-animated-ocean .logo-stop-1,
-.logo-animated-ocean .logo-stop-2 {
-  animation: logo-pulse-ocean 2.5s ease-in-out infinite;
+  animation: logo-color-cycle-2 4s linear infinite;
   stop-opacity: 1;
 }

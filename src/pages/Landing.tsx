@@ -1,130 +1,22 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
-import { Shield, Sparkles, Zap, Mail, Phone, Facebook, Github, Instagram, MessageCircle, Linkedin, User, Send, Bot } from "lucide-react";
+import { Shield, Sparkles, Zap, Mail, Phone, Facebook, Github, Instagram, MessageCircle, Linkedin, User } from "lucide-react";
 import Logo from "@/components/Logo";
 import ownerAvatar from "@/assets/owner-avatar.jfif";
-import { loadDataset, DatasetParser } from "@/utils/datasetParser";
-import { createAIService, AIService } from "@/utils/aiService";
-
-interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-}
+import ChatBot from "@/components/ChatBot";
 
 const Landing = () => {
   const navigate = useNavigate();
   const [showOwnerDialog, setShowOwnerDialog] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const [datasetParser, setDatasetParser] = useState<DatasetParser | null>(null);
-  const [aiService, setAiService] = useState<AIService | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [chatMessages]);
-
-  useEffect(() => {
-    const loadDatasetAsync = async () => {
-      const parser = await loadDataset();
-      if (parser) {
-        setDatasetParser(parser);
-      }
-      
-      // Load AI service
-      const aiService = await createAIService();
-      if (aiService) {
-        setAiService(aiService);
-      }
-    };
-    loadDatasetAsync();
-  }, []);
-
-  const handleSendMessage = async () => {
-    if (!chatInput.trim()) return;
-
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: chatInput,
-      timestamp: new Date(),
-    };
-
-    setChatMessages(prev => [...prev, userMessage]);
-    setChatInput("");
-
-    // Use AI service to generate response
-    if (aiService) {
-      try {
-        const aiResponse = await aiService.generateResponse(chatInput);
-        
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: aiResponse.content,
-          timestamp: new Date(),
-        };
-        setChatMessages(prev => [...prev, aiMessage]);
-      } catch (error) {
-        console.error('AI service error:', error);
-        const errorMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: "Sorry, I encountered an error processing your request. Please try again.",
-          timestamp: new Date(),
-        };
-        setChatMessages(prev => [...prev, errorMessage]);
-      }
-    } else if (datasetParser) {
-      // Fallback to dataset parser if AI service is not available
-      setTimeout(() => {
-        const answer = datasetParser.findAnswer(chatInput);
-        const response = answer || "I couldn't find specific information about that. Please try asking in a different way.";
-        
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: response,
-          timestamp: new Date(),
-        };
-        setChatMessages(prev => [...prev, aiMessage]);
-      }, 1000);
-    } else {
-      // Fallback message if neither service is available
-      setTimeout(() => {
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: "I'm still loading my knowledge base. Please wait a moment and try again.",
-          timestamp: new Date(),
-        };
-        setChatMessages(prev => [...prev, aiMessage]);
-      }, 1000);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
   return <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between bg-secondary-foreground">
           <div className="flex items-center gap-3">
-            <Logo className="w-10 h-10" colorMode="rainbow" blink={true} />
+            <Logo className="w-10 h-10" />
             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">M873</span>
           </div>
           <div className="flex gap-3">
@@ -203,62 +95,6 @@ const Landing = () => {
               </CardContent>
             </Card>
           </div>
-
-          {/* Chat Box */}
-          <div className="max-w-2xl mx-auto mt-12">
-            <Card className="border-border/50">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Bot className="w-4 h-4 text-primary" />
-                  <h3 className="text-base font-semibold text-foreground">Ask about M873</h3>
-                </div>
-                
-                {/* Chat Messages */}
-                <div className="h-32 overflow-y-auto border rounded-lg p-3 mb-3 bg-muted/30">
-                  {chatMessages.length === 0 ? (
-                    <div className="text-muted-foreground text-center py-4 text-sm">
-                      <span>Start a conversation...</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {chatMessages.map((message) => (
-                        <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                          <div className={`flex items-start gap-2 max-w-xs ${message.role === "user" ? "flex-row-reverse" : ""}`}>
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${message.role === "user" ? "bg-primary" : "bg-muted"}`}>
-                              {message.role === "user" ? (
-                                <User className="w-3 h-3 text-primary-foreground" />
-                              ) : (
-                                <Logo className="w-4 h-4" />
-                              )}
-                            </div>
-                            <div className={`rounded-lg px-2 py-1 text-xs ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                              <p className="text-xs">{message.content}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      <div ref={chatEndRef} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Chat Input */}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Ask me about M873..."
-                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                  <Button onClick={handleSendMessage} size="sm">
-                    <Send className="w-3 h-3" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </main>
 
@@ -310,7 +146,7 @@ const Landing = () => {
       <footer className="border-t border-border/50 mt-20">
         <div className="container mx-auto px-6 py-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Logo className="w-6 h-6" blink={true} />
+            <Logo className="w-6 h-6" />
             <span className="text-sm text-muted-foreground">M873</span>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -325,6 +161,9 @@ const Landing = () => {
         className="fixed bottom-4 right-4 w-2 h-2 bg-black rounded-full opacity-50 hover:opacity-100 transition-opacity cursor-pointer z-50"
         aria-label="Owner Access"
       />
+
+      {/* ChatBot */}
+      <ChatBot />
     </div>;
 };
 export default Landing;

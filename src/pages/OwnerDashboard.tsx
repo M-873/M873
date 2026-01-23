@@ -92,7 +92,7 @@ const OwnerDashboard = () => {
         .order("sort_order", { ascending: true });
 
       if (featuresError) throw featuresError;
-      setFeatures(featuresData || []);
+      setFeatures(featuresData as unknown as Feature[] || []);
 
       // Fetch profiles (all users)
       const { data: profilesData, error: profilesError } = await supabase
@@ -151,7 +151,7 @@ const OwnerDashboard = () => {
 
     try {
       // Build save data with only available columns
-      const saveData: Record<string, string | number | null> = {
+      const saveData: Partial<Feature> = {
         title: featureTitle,
         description: featureDescription || null,
       };
@@ -176,9 +176,11 @@ const OwnerDashboard = () => {
         if (error) throw error;
         toast.success("Feature updated!");
       } else {
+        // For insert, we need to ensure title is provided
+        const insertData = { ...saveData, title: featureTitle };
         const { error } = await supabase
           .from("features")
-          .insert(saveData);
+          .insert(insertData);
 
         if (error) throw error;
         toast.success("Feature added!");
@@ -296,7 +298,7 @@ const OwnerDashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex items-center justify-center">
         <div className="text-center">
-          <Logo className="w-16 h-16 mx-auto mb-4" colorMode="animated-fire" blink={true} />
+          <Logo className="w-16 h-16 mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -322,7 +324,7 @@ const OwnerDashboard = () => {
               >
                 <ArrowLeft className="w-4 h-4" />
               </Button>
-              <Logo className="w-8 h-8" colorMode="animated-fire" blink={true} />
+              <Logo className="w-8 h-8" />
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
                 <span className="text-lg font-bold text-white">Owner Dashboard</span>

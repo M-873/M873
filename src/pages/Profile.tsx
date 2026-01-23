@@ -3,47 +3,38 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Mail, Calendar, User as UserIcon, LogOut, Shield } from "lucide-react";
+import { ArrowLeft, Mail, Calendar, User as UserIcon, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 const Profile = () => {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState("");
   const [createdAt, setCreatedAt] = useState("");
-  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
-    // Check auth status and get user info (optional for public viewing)
+    // Check auth status and get user info
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (!session) {
+        navigate("/auth");
+      } else {
         setUserEmail(session.user.email || "");
         setCreatedAt(new Date(session.user.created_at).toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
         }));
-        // Check if user is owner
-        if (session.user.email === "mahfuzulislam873@gmail.com") {
-          setIsOwner(true);
-        }
       }
     });
   }, [navigate]);
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut({ scope: 'local' });
-      if (error) {
-        console.error('SignOut error:', error);
-        throw error;
-      }
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       toast.success("Logged out successfully");
       navigate("/");
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast.error(error instanceof Error ? error.message : "Failed to log out");
-      // Force navigation even if signOut fails
-      navigate("/");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to log out");
     }
   };
 
@@ -58,48 +49,36 @@ const Profile = () => {
           </div>
 
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-primary">M873 Profile</h1>
-            <p className="text-sm text-muted-foreground">About this platform</p>
+            <h1 className="text-2xl font-bold text-primary">User Profile</h1>
+            <p className="text-sm text-muted-foreground">Your account information</p>
           </div>
 
           <div className="space-y-4">
             <div className="p-4 rounded-lg bg-muted/50 space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Shield className="w-4 h-4" />
-                <span>Platform</span>
+                <UserIcon className="w-4 h-4" />
+                <span>Full Name</span>
               </div>
-              <p className="font-medium text-foreground">M873 Feature Management System</p>
+              <p className="font-medium text-foreground">
+                {userEmail.split('@')[0] || "User"}
+              </p>
             </div>
 
             <div className="p-4 rounded-lg bg-muted/50 space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <UserIcon className="w-4 h-4" />
-                <span>Access Level</span>
+                <Mail className="w-4 h-4" />
+                <span>Email Address</span>
               </div>
-              <p className="font-medium text-foreground">
-                {userEmail ? (isOwner ? "Owner" : "User") : "Public Visitor"}
-              </p>
+              <p className="font-medium text-foreground">{userEmail}</p>
             </div>
 
-            {userEmail && (
-              <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="w-4 h-4" />
-                  <span>Email Address</span>
-                </div>
-                <p className="font-medium text-foreground">{userEmail}</p>
+            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="w-4 h-4" />
+                <span>Account Created</span>
               </div>
-            )}
-
-            {createdAt && (
-              <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  <span>Account Created</span>
-                </div>
-                <p className="font-medium text-foreground">{createdAt}</p>
-              </div>
-            )}
+              <p className="font-medium text-foreground">{createdAt}</p>
+            </div>
           </div>
 
           <div className="space-y-3 pt-4">
@@ -109,7 +88,6 @@ const Profile = () => {
               onClick={() => navigate("/dashboard")}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              View Features
               Back to Dashboard
             </Button>
             <Button

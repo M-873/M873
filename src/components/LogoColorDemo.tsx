@@ -35,7 +35,7 @@ const LogoColorDemo = () => {
                 <CardTitle className="text-sm font-medium text-center">{name}</CardTitle>
               </CardHeader>
               <CardContent className="flex justify-center items-center py-4">
-                <Logo className="w-16 h-16" colorMode={mode} />
+                <Logo className="w-16 h-16" />
               </CardContent>
             </Card>
           ))}
@@ -45,11 +45,11 @@ const LogoColorDemo = () => {
           <h2 className="text-xl font-semibold mb-4">Usage Example</h2>
           <div className="bg-muted p-4 rounded-md">
             <code className="text-sm">
-              {`<Logo colorMode="rainbow" className="w-10 h-10" blink={true} />`}
+              {`<Logo className="w-10 h-10" />`}
             </code>
           </div>
           <p className="mt-2 text-muted-foreground">
-            Available color modes: gradient, rainbow, blue, red, green, purple, gold, silver, neon, fire, ocean, animated-gold, animated-silver, animated-neon, animated-fire, animated-ocean
+            Logo displays with animated gradient colors
           </p>
         </div>
       </div>

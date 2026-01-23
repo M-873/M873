@@ -128,19 +128,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      generate_owner_otp: {
-        Args: {
-          p_email: string
-        }
-        Returns: { otp: string; expires_at: string }[]
-      }
-      verify_owner_otp: {
-        Args: {
-          p_email: string
-          p_otp: string
-        }
-        Returns: boolean
-      }
     }
     Enums: {
       app_role: "owner" | "user"

@@ -162,7 +162,7 @@ const LearnMore = () => {
       <footer className="border-t border-border/50 mt-20">
         <div className="container mx-auto px-6 py-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Logo className="w-6 h-6" blink={true} />
+            <Logo className="w-6 h-6" />
             <span className="text-sm text-muted-foreground">M873</span>
           </div>
           <p className="text-sm text-muted-foreground">
