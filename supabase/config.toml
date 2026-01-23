@@ -11,10 +11,6 @@ enable_confirmations = false
 otp_expiry = 1800
 # OTP length
 otp_length = 6
-# Max OTP attempts
-max_otp_attempts = 5
-# OTP cooldown in seconds
-otp_cooldown = 60
 
 [auth.email.template.otp]
 subject = "Your M873 Login Code"
