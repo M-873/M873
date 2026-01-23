@@ -95,25 +95,7 @@ const Landing = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
-              <CardContent className="p-6 space-y-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                  <MessageCircle className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold text-primary">Hostel Expense Management</h3>
-                <p className="text-sm text-muted-foreground">
-                  The Hostel Expense Management application is currently under development. It is expected that within one month, approximately 80% of the core features will be fully usable. In the next phase, AI integration will be implemented. With access to CCTV systems and mobile devices, the system will be able to automate nearly 60% of operational tasks, requiring only minimal monitoring. Our ultimate goal is to simplify daily operations and make life easier through intelligent automation.
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-2"
-                  onClick={() => window.open('https://frontend-inky-one-43.vercel.app/', '_blank')}
-                >
-                  View Details
-                </Button>
-              </CardContent>
-            </Card>
+
           </div>
         </div>
       </main>
