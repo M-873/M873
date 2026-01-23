@@ -24,12 +24,20 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchFeatures = async () => {
+      console.log("Fetching features from Supabase...");
       const { data, error } = await supabase
         .from("features")
         .select("*")
         .order("sort_order", { ascending: true });
 
+      console.log("Supabase response:", { data, error });
+      
+      if (error) {
+        console.error("Error fetching features:", error);
+      }
+      
       if (!error && data) {
+        console.log("Features loaded:", data.length, "features");
         setFeatures(data);
       }
       setLoading(false);

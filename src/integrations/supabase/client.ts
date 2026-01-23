@@ -8,7 +8,13 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY |
 console.log("Supabase config:", { 
   URL: SUPABASE_URL, 
   hasKey: !!SUPABASE_PUBLISHABLE_KEY && SUPABASE_PUBLISHABLE_KEY !== 'placeholder-key',
-  keyLength: SUPABASE_PUBLISHABLE_KEY?.length 
+  keyLength: SUPABASE_PUBLISHABLE_KEY?.length,
+  isProduction: import.meta.env.PROD,
+  envVars: {
+    url: !!import.meta.env.VITE_SUPABASE_URL,
+    key: !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    anonKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+  }
 });
 
 // Import the supabase client like this:
