@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test HEM Feature</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .feature { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .feature h3 { margin: 0 0 10px 0; color: #333; }
+        .feature p { margin: 5px 0; color: #666; }
+        .feature a { color: #007bff; text-decoration: none; }
+        .feature a:hover { text-decoration: underline; }
+        .view-details { background: #007bff; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; }
+        .view-details:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>HEM Feature Test</h1>
+    <div id="results">Loading...</div>
+    
+    <script>
+        const supabaseUrl = 'https://mgkarabtbhluvkrfyrmu.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1na2FyYWJ0YmhsdXZrcmZ5cm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1NzkxNTQsImV4cCI6MjA4MDE1NTE1NH0.Kn14ixl4_2dyzH6BM3sAsdQ61lfPmtZPRoJD6Tz8cyc';
+        
+        async function testHEMFeature() {
+            try {
+                const response = await fetch(`${supabaseUrl}/rest/v1/features?select=*&order=sort_order.asc`, {
+                    headers: {
+                        'apikey': supabaseKey,
+                        'Authorization': `Bearer ${supabaseKey}`
+                    }
+                });
+                
+                const data = await response.json();
+                const resultsDiv = document.getElementById('results');
+                
+                if (data.length === 0) {
+                    resultsDiv.innerHTML = '<p>No features found.</p>';
+                    return;
+                }
+                
+                const hemFeature = data.find(f => f.title === 'Hostel Expense Management');
+                
+                if (hemFeature) {
+                    resultsDiv.innerHTML = `
+                        <div class="feature">
+                            <h3>✅ HEM Feature Found!</h3>
+                            <p><strong>Title:</strong> ${hemFeature.title}</p>
+                            <p><strong>Description:</strong> ${hemFeature.description}</p>
+                            <p><strong>Status:</strong> ${hemFeature.status}</p>
+                            <p><strong>Link:</strong> <a href="${hemFeature.link}" target="_blank">${hemFeature.link}</a></p>
+                            <p><strong>Sort Order:</strong> ${hemFeature.sort_order}</p>
+                            <button class="view-details" onclick="window.open('${hemFeature.link}', '_blank')">View Details</button>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<p>❌ HEM feature not found in database.</p>';
+                }
+                
+                // Show all features
+                resultsDiv.innerHTML += '<h2>All Features:</h2>';
+                data.forEach(feature => {
+                    resultsDiv.innerHTML += `
+                        <div class="feature">
+                            <h3>${feature.title}</h3>
+                            <p>${feature.description || 'No description'}</p>
+                            <p>Status: ${feature.status || 'upcoming'}</p>
+                            ${feature.link ? `<p>Link: <a href="${feature.link}" target="_blank">${feature.link}</a></p>` : ''}
+                            <p>Sort Order: ${feature.sort_order || 0}</p>
+                        </div>
+                    `;
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('results').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        testHEMFeature();
+    </script>
+</body>
+</html>
