@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
 import { useOwnerAuth } from "@/hooks/useOwnerAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,28 +76,140 @@ const OwnerDashboard = () => {
     }
   }, [isOwner]);
 
+  // Use the same supabase client to maintain session consistency
+  const ownerSupabase = supabase;
+
+  // Debug Supabase configuration
+  useEffect(() => {
+    console.log("=== SUPABASE CONFIG DEBUG ===");
+    console.log("VITE_SUPABASE_URL:", import.meta.env.VITE_SUPABASE_URL);
+    console.log("VITE_SUPABASE_PUBLISHABLE_KEY:", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.substring(0, 20) + "...");
+    console.log("Default Supabase client URL:", supabase.supabaseUrl);
+    console.log("Owner Supabase client URL:", ownerSupabase.supabaseUrl);
+    
+    // Test connection with owner client
+    ownerSupabase.from('features').select('*').limit(1).then(result => {
+      console.log("Owner client test result:", result);
+    }).catch(error => {
+      console.error("Owner client test error:", error);
+    });
+    
+    console.log("=== END SUPABASE CONFIG DEBUG ===");
+  }, []);
+
+  // Test database connection
+  const testDatabaseConnection = async () => {
+    console.log("=== TESTING DATABASE CONNECTION ===");
+    console.log("Using ownerSupabase client with URL:", ownerSupabase.supabaseUrl);
+    
+    try {
+      // Test 1: Check if we can query the features table and get actual schema
+      console.log("Test 1: Querying features table...");
+      const { data: featuresData, error: featuresError } = await ownerSupabase
+        .from("features")
+        .select("*")
+        .limit(1);
+      
+      console.log("Features query result:", { 
+        data: featuresData, 
+        error: featuresError,
+        dataLength: featuresData?.length 
+      });
+
+      // Test 1b: Check table schema
+      console.log("Test 1b: Checking table schema...");
+      const { data: schemaData, error: schemaError } = await ownerSupabase
+        .from("features")
+        .select("id, title, description, status, sort_order, created_at")
+        .limit(0);
+      
+      console.log("Schema check result:", { 
+        error: schemaError,
+        columns: schemaError ? 'unknown' : ['id', 'title', 'description', 'status', 'sort_order', 'created_at']
+      });
+
+      // Test 2: Check user session
+      console.log("Test 2: Checking user session...");
+      const { data: sessionData, error: sessionError } = await ownerSupabase.auth.getSession();
+      console.log("Session result:", { 
+        session: sessionData, 
+        error: sessionError,
+        hasSession: !!sessionData.session,
+        user: sessionData.session?.user
+      });
+
+      // Test 3: Check RLS policies by trying a simple insert with only basic fields
+      console.log("Test 3: Testing insert permission with minimal data...");
+      const testData = {
+        title: "TEST_FEATURE_" + Date.now(),
+        description: "Test description",
+        status: 'active',
+        sort_order: 999
+      };
+      
+      const { data: insertData, error: insertError } = await ownerSupabase
+        .from("features")
+        .insert(testData)
+        .select()
+        .single();
+        
+      console.log("Insert test result:", { 
+        data: insertData, 
+        error: insertError,
+        success: !insertError
+      });
+
+      // If insert succeeded, delete the test data
+      if (insertData?.id) {
+        console.log("Test 4: Cleaning up test data...");
+        const { error: deleteError } = await ownerSupabase
+          .from("features")
+          .delete()
+          .eq("id", insertData.id);
+        console.log("Cleanup result:", { error: deleteError, success: !deleteError });
+      }
+
+    } catch (error) {
+      console.error("Database connection test failed:", error);
+    }
+    console.log("=== DATABASE CONNECTION TEST COMPLETE ===");
+  };
+
   const fetchData = async () => {
     setIsLoadingData(true);
     try {
-      // Get available columns first
-      const columns = await getAvailableFeaturesColumns();
-      console.log("Available features columns:", columns);
-      setAvailableColumns(columns);
-
-      // Build select query with only available columns
-      const selectColumns = columns.join(', ');
+      // Build select query with all available columns including link
+      let selectQuery = "id, title, description, status, sort_order, link, created_at";
       
-      // Fetch features with only available columns
-      const { data: featuresData, error: featuresError } = await supabase
+      const { data: featuresData, error: featuresError } = await ownerSupabase
         .from("features")
-        .select(selectColumns)
+        .select(selectQuery)
         .order("sort_order", { ascending: true });
 
-      if (featuresError) throw featuresError;
-      setFeatures(featuresData as unknown as Feature[] || []);
+      if (featuresError) {
+        console.error("Error fetching features:", featuresError);
+        toast.error("Failed to load features");
+      } else {
+        setFeatures(featuresData || []);
+        
+        // Detect available columns from the first feature
+        if (featuresData && featuresData.length > 0) {
+          const firstFeature = featuresData[0];
+          const columns = Object.keys(firstFeature).filter(key => 
+            key !== 'id' && key !== 'created_at' && key !== 'updated_at'
+          );
+          setAvailableColumns(columns);
+          console.log("Available columns detected:", columns);
+          console.log("First feature data:", firstFeature);
+          console.log("Link column available:", columns.includes('link'));
+        } else {
+          console.log("No features found, using default columns");
+          setAvailableColumns(['title', 'description', 'status', 'sort_order']);
+        }
+      }
 
       // Fetch profiles (all users)
-      const { data: profilesData, error: profilesError } = await supabase
+      const { data: profilesData, error: profilesError } = await ownerSupabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
@@ -104,7 +218,7 @@ const OwnerDashboard = () => {
       setProfiles(profilesData || []);
 
       // Fetch user roles
-      const { data: rolesData, error: rolesError } = await supabase
+      const { data: rolesData, error: rolesError } = await ownerSupabase
         .from("user_roles")
         .select("user_id, role");
 
@@ -149,8 +263,15 @@ const OwnerDashboard = () => {
       return;
     }
 
+    console.log("=== SAVE FEATURE DEBUG ===");
+    console.log("User:", user);
+    console.log("Is Owner:", isOwner);
+    console.log("Editing Feature:", editingFeature);
+    console.log("Feature Title:", featureTitle);
+    console.log("Feature Description:", featureDescription);
+    console.log("Feature Link:", featureLink);
+
     try {
-      // Build save data with only available columns
       const saveData: Partial<Feature> = {
         title: featureTitle,
         description: featureDescription || null,
@@ -159,45 +280,55 @@ const OwnerDashboard = () => {
       // Only add link if the column exists and a value is provided
       if (availableColumns.includes('link') && featureLink?.trim()) {
         saveData.link = featureLink;
+      } else {
+        console.log("Link column not available or empty, skipping...");
       }
 
-      // Add sort_order for new features
       if (!editingFeature) {
         const maxOrder = features.length > 0 ? Math.max(...features.map(f => f.sort_order || 0)) : 0;
         saveData.sort_order = maxOrder + 1;
+        saveData.status = 'active'; // Add required status field
       }
 
+      console.log("Save Data:", saveData);
+      console.log("Available Columns:", availableColumns);
+
       if (editingFeature) {
-        const { error } = await supabase
+        console.log("Updating existing feature...");
+        const { data, error } = await ownerSupabase
           .from("features")
           .update(saveData)
           .eq("id", editingFeature.id);
-
+        console.log("Update result:", { data, error });
         if (error) throw error;
         toast.success("Feature updated!");
       } else {
-        // For insert, we need to ensure title is provided
+        console.log("Inserting new feature...");
         const insertData = { ...saveData, title: featureTitle };
-        const { error } = await supabase
+        console.log("Insert data:", insertData);
+        const { data, error } = await ownerSupabase
           .from("features")
           .insert(insertData);
-
+        console.log("Insert result:", { data, error });
         if (error) throw error;
         toast.success("Feature added!");
       }
 
       setFeatureTitle("");
       setFeatureDescription("");
-      if (availableColumns.includes('link')) {
-        setFeatureLink("");
-      }
+      if (availableColumns.includes('link')) setFeatureLink("");
       setEditingFeature(null);
       setIsFeatureDialogOpen(false);
       fetchData();
     } catch (error: unknown) {
       console.error("Feature save error:", error);
-      
-      // Handle specific error cases
+      console.error("Error details:", {
+        name: error?.constructor?.name,
+        message: (error as any)?.message,
+        code: (error as any)?.code,
+        details: (error as any)?.details,
+        hint: (error as any)?.hint,
+      });
       if (error instanceof Error) {
         if ('code' in error && error.code === '42501') {
           toast.error("Permission denied. Please ensure you have owner privileges.");
@@ -215,15 +346,50 @@ const OwnerDashboard = () => {
   };
 
   const handleDeleteFeature = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this feature?")) return;
+    console.log("=== DELETE FEATURE DEBUG - START ===");
+    console.log("Delete button clicked for feature ID:", id);
+    
+    if (!confirm("Are you sure you want to delete this feature?")) {
+      console.log("User cancelled deletion");
+      return;
+    }
+
+    console.log("=== DELETE FEATURE DEBUG ===");
+    console.log("Attempting to delete feature with ID:", id);
+    console.log("User:", user);
+    console.log("Is Owner:", isOwner);
 
     try {
-      const { error } = await supabase.from("features").delete().eq("id", id);
-      if (error) throw error;
+      const { error, data } = await ownerSupabase.from("features").delete().eq("id", id);
+      console.log("Delete result:", { error, data });
+      
+      if (error) {
+        console.error("Delete error details:", {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+      
       toast.success("Feature deleted!");
       fetchData();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to delete feature");
+    } catch (error: unknown) {
+      console.error("Delete feature error:", error);
+      if (error instanceof Error) {
+        if ('code' in error && error.code === '42501') {
+          toast.error("Permission denied. Please ensure you have owner privileges.");
+        } else if ('code' in error && error.code === 'PGRST204') {
+          toast.error("Database schema issue. Please contact support.");
+        } else if (error.message?.includes('row-level security')) {
+          toast.error("Access denied. Please log in as an owner.");
+        } else {
+          toast.error(error.message || "Failed to delete feature");
+        }
+      } else {
+        toast.error("Failed to delete feature");
+      }
     }
   };
 
@@ -257,7 +423,7 @@ const OwnerDashboard = () => {
     try {
       if (currentRole === "owner") {
         // Remove owner role
-        const { error } = await supabase
+        const { error } = await ownerSupabase
           .from("user_roles")
           .delete()
           .eq("user_id", userId)
@@ -267,7 +433,7 @@ const OwnerDashboard = () => {
         toast.success("Owner role removed");
       } else {
         // Add owner role
-        const { error } = await supabase
+        const { error } = await ownerSupabase
           .from("user_roles")
           .insert({ user_id: userId, role: "owner" });
 
@@ -282,7 +448,7 @@ const OwnerDashboard = () => {
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      const { error } = await ownerSupabase.auth.signOut({ scope: 'local' });
       if (error) {
         console.error('SignOut error:', error);
       }
@@ -329,6 +495,17 @@ const OwnerDashboard = () => {
                 <Shield className="w-5 h-5 text-primary" />
                 <span className="text-lg font-bold text-white">Owner Dashboard</span>
               </div>
+              <div className="text-xs text-white/70">
+                Debug: User: {user ? '✓' : '✗'} | Owner: {isOwner ? '✓' : '✗'} | Loading: {loading ? '✓' : '✗'}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={testDatabaseConnection}
+                className="border-white/20 text-white hover:text-white hover:bg-white/10"
+              >
+                Test DB
+              </Button>
             </div>
             <Button variant="outline" size="sm" onClick={handleSignOut} className="border-white/20 text-white hover:text-white hover:bg-white/10">
               <LogOut className="w-4 h-4 mr-2" />
@@ -360,64 +537,64 @@ const OwnerDashboard = () => {
           <TabsContent value="features" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-primary">Manage Features</h2>
-              <Dialog open={isFeatureDialogOpen} onOpenChange={setIsFeatureDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={openAddDialog}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Feature
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{editingFeature ? "Edit Feature" : "Add Feature"}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Title</Label>
-                      <Input
-                        id="title"
-                        value={featureTitle}
-                        onChange={(e) => setFeatureTitle(e.target.value)}
-                        placeholder="Feature title"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={featureDescription}
-                        onChange={(e) => setFeatureDescription(e.target.value)}
-                        placeholder="Feature description"
-                        rows={3}
-                      />
-                    </div>
-                    {availableColumns.includes('link') && (
-                      <div className="space-y-2">
-                        <Label htmlFor="link">Link (optional)</Label>
-                        <Input
-                          id="link"
-                          value={featureLink}
-                          onChange={(e) => setFeatureLink(e.target.value)}
-                          placeholder="https://example.com"
-                          type="url"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          When set, "View Details" will open this link
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <DialogFooter>
-                    <DialogClose asChild>
-                      <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button onClick={handleSaveFeature}>
-                      {editingFeature ? "Update" : "Add"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <Button onClick={openAddDialog}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Feature
+              </Button>
             </div>
+            
+            {/* Feature Dialog - Separate from trigger buttons */}
+            <Dialog open={isFeatureDialogOpen} onOpenChange={setIsFeatureDialogOpen}>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>{editingFeature ? "Edit Feature" : "Add Feature"}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      id="title"
+                      value={featureTitle}
+                      onChange={(e) => setFeatureTitle(e.target.value)}
+                      placeholder="Feature title"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={featureDescription}
+                      onChange={(e) => setFeatureDescription(e.target.value)}
+                      placeholder="Feature description"
+                      rows={3}
+                    />
+                  </div>
+                  {availableColumns.includes('link') && (
+                    <div className="space-y-2">
+                      <Label htmlFor="link">Link (optional)</Label>
+                      <Input
+                        id="link"
+                        value={featureLink}
+                        onChange={(e) => setFeatureLink(e.target.value)}
+                        placeholder="https://example.com"
+                        type="url"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        When set, "View Details" will open this link
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Cancel</Button>
+                  </DialogClose>
+                  <Button onClick={handleSaveFeature}>
+                    {editingFeature ? "Update" : "Add"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
             <Card>
               <CardContent className="p-0">

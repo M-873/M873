@@ -4,8 +4,8 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // Environment variables for local development
-const SUPABASE_URL = 'https://zxbydjiptihzsxucvynp.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4YnlkanlwdGlhenN4dWN2eW5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU2NTg3MzUsImV4cCI6MjA1MTIzNDczNX0.mxd7r8y4wzkq1w5pdr8qpgp4xq5k5pdr8qpgp4xq5k5'
+const SUPABASE_URL = 'https://mgkarabtbhluvkrfyrmu.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1na2FyYWJ0YmhsdXZrcmZ5cm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1NzkxNTQsImV4cCI6MjA4MDE1NTE1NH0.Kn14ixl4_2dyzH6BM3sAsdQ61lfPmtZPRoJD6Tz8cyc'
 
 interface RequestPayload {
   email: string;
