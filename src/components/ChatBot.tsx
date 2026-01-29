@@ -169,19 +169,19 @@ You can reach out through the contact information provided on the website or use
 
       {/* Chat Window */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 w-80 h-96 shadow-xl z-50 flex flex-col">
-          <CardHeader className="py-3 px-4 border-b">
+        <Card className="fixed bottom-24 right-6 w-80 h-96 shadow-xl z-50 flex flex-col overflow-hidden">
+          <CardHeader className="py-3 px-4 border-b flex-shrink-0">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
               M873 Assistant
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="flex-1 p-0 flex flex-col">
+          <CardContent className="flex-1 min-h-0 p-0 flex flex-col overflow-hidden">
             {/* Messages */}
             <div
               ref={scrollContainerRef}
-              className="flex-1 overflow-y-auto p-4 space-y-3"
+              className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0"
             >
               {messages.map((message) => (
                 <div
@@ -190,7 +190,7 @@ You can reach out through the contact information provided on the website or use
                 >
                   {message.content && (
                     <div
-                      className={`max-w-[70%] rounded-lg px-3 py-2 text-sm ${message.isUser
+                      className={`max-w-[85%] rounded-lg px-3 py-2 text-sm break-words ${message.isUser
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted text-muted-foreground'
                         }`}
