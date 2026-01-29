@@ -26,12 +26,12 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchFeatures = async () => {
       console.log("Fetching features from Supabase...");
-      
+
       // Use safe fetching to handle missing columns
       const { data, error } = await fetchFeaturesSafe();
-      
+
       console.log("Safe fetch result:", { data, error });
-      
+
       if (error) {
         console.error("Error fetching features:", error);
         // Still set empty array to prevent loading forever
@@ -40,81 +40,88 @@ const Dashboard = () => {
         console.log("Features loaded:", data.length, "features");
         setFeatures(data);
       }
-      
+
       setLoading(false);
     };
 
     fetchFeatures();
   }, []);
   return <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-background to-accent/5">
-        {/* Sidebar */}
-        <Sidebar className="border-r border-white/10 bg-gradient-to-b from-navDark to-navBlue">
-          <div className="p-4 border-b border-white/10 bg-secondary-foreground">
-            <div className="flex items-center gap-3 bg-secondary-foreground text-secondary-foreground">
-              <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="hover:bg-white/10 h-8 w-8">
-                <ArrowLeft className="w-4 h-4 text-white" />
-              </Button>
-              <Logo className="w-8 h-8" />
-              <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent bg-secondary-foreground">M873</span>
+    <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-background to-accent/5">
+      {/* Sidebar */}
+      <Sidebar className="border-r border-white/10 bg-gradient-to-b from-navDark to-navBlue">
+        <div className="p-4 border-b border-white/10 bg-secondary-foreground">
+          <div className="flex items-center gap-3 bg-secondary-foreground text-secondary-foreground">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="hover:bg-white/10 h-8 w-8">
+              <ArrowLeft className="w-4 h-4 text-white" />
+            </Button>
+            <Logo className="w-8 h-8" />
+            <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent bg-secondary-foreground">M873</span>
+          </div>
+        </div>
+
+        <SidebarContent className="bg-secondary-foreground">
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-white/70 text-sm">Features</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="border-primary">
+                {features.map(feature => <SidebarMenuItem key={feature.id}>
+                  <SidebarMenuButton asChild>
+                    <NavLink to={`/upcoming/${feature.id}`} className="text-white/80 hover:text-white hover:bg-white/10 text-base" activeClassName="bg-white/20 text-white">
+                      <span>{feature.title}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Bar */}
+        <header className="border-b border-white/10 bg-gradient-to-r from-navDark to-navBlue backdrop-blur-sm">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger className="text-white hover:bg-white/10" />
             </div>
           </div>
-          
-          <SidebarContent className="bg-secondary-foreground">
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-white/70 text-sm">Features</SidebarGroupLabel>
-              <SidebarGroupContent>
-              <SidebarMenu className="border-primary">
-                  {features.map(feature => <SidebarMenuItem key={feature.id}>
-                      <SidebarMenuButton asChild>
-                        <NavLink to={`/upcoming/${feature.id}`} className="text-white/80 hover:text-white hover:bg-white/10 text-base" activeClassName="bg-white/20 text-white">
-                          <span>{feature.title}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>)}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
+        </header>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Top Bar */}
-          <header className="border-b border-white/10 bg-gradient-to-r from-navDark to-navBlue backdrop-blur-sm">
-            <div className="flex items-center justify-between px-6 py-4">
-              <div className="flex items-center gap-4">
-                <SidebarTrigger className="text-white hover:bg-white/10" />
-              </div>
+        <main className="flex-1 p-6">
+          <div className="max-w-6xl mx-auto space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold text-primary mb-2">Welcome back!</h2>
+              <p className="text-muted-foreground">
+                Explore upcoming features and stay tuned for updates.
+              </p>
             </div>
-          </header>
 
-          <main className="flex-1 p-6">
-            <div className="max-w-6xl mx-auto space-y-6">
-              <div>
-                <h2 className="text-3xl font-bold text-primary mb-2">Welcome back!</h2>
-                <p className="text-muted-foreground">
-                  Explore upcoming features and stay tuned for updates.
-                </p>
-              </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {features.map(feature => {
+                const isActive = feature.status?.toLowerCase() === 'active';
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {features.map(feature => <Card key={feature.id} className="border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
+                return (
+                  <Card key={feature.id} className={`border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-lg ${!isActive ? 'opacity-90' : ''}`}>
                     <CardContent className="p-6 space-y-4">
                       <div className="space-y-2">
-                        <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                          {feature.status || "Upcoming"}
+                        <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${isActive
+                            ? "bg-green-100 text-green-700 border border-green-200"
+                            : "bg-primary/10 text-primary"
+                          }`}>
+                          {isActive ? "Active" : "Upcoming"}
                         </div>
                         <h3 className="text-lg font-semibold text-foreground">
                           {feature.title}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground line-clamp-3">
                           {feature.description || "This feature will be added soon."}
                         </p>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        className="w-full" 
+                      <Button
+                        variant={isActive ? "default" : "outline"}
+                        className="w-full group"
                         onClick={() => {
                           if (feature.link) {
                             window.open(feature.link, '_blank', 'noopener,noreferrer');
@@ -126,12 +133,14 @@ const Dashboard = () => {
                         View Details
                       </Button>
                     </CardContent>
-                  </Card>)}
-              </div>
+                  </Card>
+                );
+              })}
             </div>
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
-    </SidebarProvider>;
+    </div>
+  </SidebarProvider>;
 };
 export default Dashboard;

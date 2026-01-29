@@ -264,54 +264,43 @@ const OwnerDashboard = () => {
       return;
     }
 
-    console.log("=== SAVE FEATURE DEBUG ===");
-    console.log("User:", user);
-    console.log("Is Owner:", isOwner);
-    console.log("Editing Feature:", editingFeature);
-    console.log("Feature Title:", featureTitle);
-    console.log("Feature Description:", featureDescription);
-    console.log("Feature Link:", featureLink);
+    console.log("=== SAVE FEATURE STARTING ===");
+    console.log("Title:", featureTitle);
+    console.log("Status:", featureStatus);
+    console.log("Link:", featureLink);
 
     try {
-      const saveData: Partial<Feature> = {
+      const saveData: any = {
         title: featureTitle,
         description: featureDescription || null,
         status: featureStatus,
+        link: featureLink?.trim() || null,
       };
-
-      // Always add link if a value is provided
-      if (featureLink?.trim()) {
-        saveData.link = featureLink;
-      }
 
       if (!editingFeature) {
         const maxOrder = features.length > 0 ? Math.max(...features.map(f => f.sort_order || 0)) : 0;
         saveData.sort_order = maxOrder + 1;
-        // status is already set in saveData
       }
 
-      console.log("Save Data:", saveData);
-      console.log("Available Columns:", availableColumns);
+      console.log("Prepared save data:", saveData);
 
       if (editingFeature) {
-        console.log("Updating existing feature...");
-        const { data, error } = await ownerSupabase
+        console.log(`Updating feature ID: ${editingFeature.id}...`);
+        const { error } = await ownerSupabase
           .from("features")
           .update(saveData)
           .eq("id", editingFeature.id);
-        console.log("Update result:", { data, error });
+
         if (error) throw error;
-        toast.success("Feature updated!");
+        toast.success("Feature updated successfully!");
       } else {
         console.log("Inserting new feature...");
-        const insertData = { ...saveData, title: featureTitle };
-        console.log("Insert data:", insertData);
-        const { data, error } = await ownerSupabase
+        const { error } = await ownerSupabase
           .from("features")
-          .insert(insertData);
-        console.log("Insert result:", { data, error });
+          .insert(saveData);
+
         if (error) throw error;
-        toast.success("Feature added!");
+        toast.success("New feature added successfully!");
       }
 
       setFeatureTitle("");
@@ -321,28 +310,19 @@ const OwnerDashboard = () => {
       setEditingFeature(null);
       setIsFeatureDialogOpen(false);
       fetchData();
-    } catch (error: unknown) {
-      console.error("Feature save error:", error);
-      console.error("Error details:", {
-        name: error?.constructor?.name,
-        message: (error as any)?.message,
-        code: (error as any)?.code,
-        details: (error as any)?.details,
-        hint: (error as any)?.hint,
-      });
-      if (error instanceof Error) {
-        if ('code' in error && error.code === '42501') {
-          toast.error("Permission denied. Please ensure you have owner privileges.");
-        } else if ('code' in error && error.code === 'PGRST204') {
-          toast.error("Database schema issue. Please contact support.");
-        } else if (error.message?.includes('row-level security')) {
-          toast.error("Access denied. Please log in as an owner.");
-        } else {
-          toast.error(error.message || "Failed to save feature");
-        }
+    } catch (error: any) {
+      console.error("Feature save failed:", error);
+      const errorMessage = error.message || "Unknown error occurred";
+
+      if (error.code === '42501') {
+        toast.error("Permission denied. Ensure you are logged in as owner.");
+      } else if (error.code === 'PGRST102') {
+        toast.error("Database error. Please check if the 'features' table exists.");
       } else {
-        toast.error("Failed to save feature");
+        toast.error(`Error: ${errorMessage}`);
       }
+    } finally {
+      console.log("=== SAVE FEATURE COMPLETED ===");
     }
   };
 
