@@ -69,14 +69,6 @@ You can reach out through the contact information provided on the website or use
 
     const datasetParser = new DatasetParser(datasetContent);
     aiServiceRef.current = new AIService(datasetParser);
-
-    // Add welcome message
-    setMessages([{
-      id: '1',
-      content: "Hello! I'm M873 Assistant. How can I help you today?\n\nYou can ask me about:\n• What is M873\n• Platform features\n• Getting started\n• Creator information",
-      isUser: false,
-      timestamp: new Date()
-    }]);
   }, []);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -102,14 +94,16 @@ You can reach out through the contact information provided on the website or use
   }, [isOpen, messages]); // Added messages dependency
 
   const scrollToBottom = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: 'auto' // Instant scroll is often better for "moving up" feel
-      });
-    }
-    // Backup using the end ref
-    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    // requestAnimationFrame ensures the scroll happens AFTER the browser has finished layout
+    requestAnimationFrame(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTo({
+          top: scrollContainerRef.current.scrollHeight,
+          behavior: 'auto'
+        });
+      }
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+    });
   };
 
   const handleSendMessage = async () => {
