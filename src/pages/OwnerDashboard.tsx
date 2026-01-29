@@ -279,11 +279,9 @@ const OwnerDashboard = () => {
         status: featureStatus,
       };
 
-      // Only add link if the column exists and a value is provided
-      if (availableColumns.includes('link') && featureLink?.trim()) {
+      // Always add link if a value is provided
+      if (featureLink?.trim()) {
         saveData.link = featureLink;
-      } else {
-        console.log("Link column not available or empty, skipping...");
       }
 
       if (!editingFeature) {
@@ -318,7 +316,7 @@ const OwnerDashboard = () => {
 
       setFeatureTitle("");
       setFeatureDescription("");
-      if (availableColumns.includes('link')) setFeatureLink("");
+      setFeatureLink("");
       setFeatureStatus("upcoming");
       setEditingFeature(null);
       setIsFeatureDialogOpen(false);
@@ -401,10 +399,7 @@ const OwnerDashboard = () => {
     setFeatureTitle(feature.title);
     setFeatureDescription(feature.description || "");
     setFeatureStatus((feature.status as "active" | "upcoming") || "upcoming");
-    // Only set link if the column exists
-    if (availableColumns.includes('link')) {
-      setFeatureLink(feature.link || "");
-    }
+    setFeatureLink(feature.link || "");
     setIsFeatureDialogOpen(true);
   };
 
@@ -414,9 +409,7 @@ const OwnerDashboard = () => {
     setFeatureTitle("");
     setFeatureDescription("");
     setFeatureStatus("upcoming");
-    if (availableColumns.includes('link')) {
-      setFeatureLink("");
-    }
+    setFeatureLink("");
     setIsFeatureDialogOpen(true);
     console.log("Dialog should be open now");
   };
@@ -576,21 +569,19 @@ const OwnerDashboard = () => {
                       rows={3}
                     />
                   </div>
-                  {availableColumns.includes('link') && (
-                    <div className="space-y-2">
-                      <Label htmlFor="link">Link (optional)</Label>
-                      <Input
-                        id="link"
-                        value={featureLink}
-                        onChange={(e) => setFeatureLink(e.target.value)}
-                        placeholder="https://example.com"
-                        type="url"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        When set, "View Details" will open this link
-                      </p>
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="link">Link (optional)</Label>
+                    <Input
+                      id="link"
+                      value={featureLink}
+                      onChange={(e) => setFeatureLink(e.target.value)}
+                      placeholder="https://example.com"
+                      type="url"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      When set, "View Details" will open this link
+                    </p>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
                     <div className="flex gap-4">
@@ -637,7 +628,7 @@ const OwnerDashboard = () => {
                     <TableRow>
                       <TableHead>Title</TableHead>
                       <TableHead>Description</TableHead>
-                      {availableColumns.includes('link') && <TableHead>Link</TableHead>}
+                      <TableHead>Link</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -649,15 +640,13 @@ const OwnerDashboard = () => {
                         <TableCell className="text-muted-foreground max-w-xs truncate">
                           {feature.description || "-"}
                         </TableCell>
-                        {availableColumns.includes('link') && (
-                          <TableCell className="text-muted-foreground max-w-xs truncate">
-                            {feature.link ? (
-                              <a href={feature.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                {feature.link.length > 30 ? feature.link.substring(0, 30) + "..." : feature.link}
-                              </a>
-                            ) : "-"}
-                          </TableCell>
-                        )}
+                        <TableCell className="text-muted-foreground max-w-xs truncate">
+                          {feature.link ? (
+                            <a href={feature.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                              {feature.link.length > 30 ? feature.link.substring(0, 30) + "..." : feature.link}
+                            </a>
+                          ) : "-"}
+                        </TableCell>
                         <TableCell>
                           <span className="inline-block px-2 py-1 rounded-full bg-primary/10 text-primary text-xs">
                             {feature.status || "upcoming"}
@@ -684,7 +673,7 @@ const OwnerDashboard = () => {
                     ))}
                     {features.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={availableColumns.includes('link') ? 5 : 4} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                           No features yet. Add your first feature!
                         </TableCell>
                       </TableRow>
@@ -719,8 +708,8 @@ const OwnerDashboard = () => {
                           <TableCell className="font-medium">{profile.email}</TableCell>
                           <TableCell>
                             <span className={`inline-block px-2 py-1 rounded-full text-xs ${role === "owner"
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-muted-foreground"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground"
                               }`}>
                               {role}
                             </span>
@@ -816,8 +805,8 @@ const OwnerDashboard = () => {
                       <div key={index} className="border rounded-lg p-4 space-y-2">
                         <div className="flex items-center gap-2">
                           <span className={`px-2 py-1 rounded text-xs font-medium ${qa.language === 'EN'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-green-100 text-green-800'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-green-100 text-green-800'
                             }`}>
                             {qa.language === 'EN' ? 'English' : 'Bengali'}
                           </span>
