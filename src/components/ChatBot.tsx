@@ -79,14 +79,20 @@ You can reach out through the contact information provided on the website or use
     }]);
   }, []);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (isOpen) {
-      scrollToBottom();
+      // Use a small timeout to ensure DOM is updated
+      const timeoutId = setTimeout(scrollToBottom, 50);
+      return () => clearTimeout(timeoutId);
     }
   }, [messages, isLoading, isOpen]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
   };
 
   const handleSendMessage = async () => {
@@ -162,7 +168,10 @@ You can reach out through the contact information provided on the website or use
 
           <CardContent className="flex-1 p-0 flex flex-col">
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div
+              ref={scrollContainerRef}
+              className="flex-1 overflow-y-auto p-4 space-y-3"
+            >
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -171,8 +180,8 @@ You can reach out through the contact information provided on the website or use
                   {message.content && (
                     <div
                       className={`max-w-[70%] rounded-lg px-3 py-2 text-sm ${message.isUser
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
                         }`}
                     >
                       {message.content.split('\n').map((line, index) => (
