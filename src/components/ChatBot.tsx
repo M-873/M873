@@ -82,17 +82,34 @@ You can reach out through the contact information provided on the website or use
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      // Use a small timeout to ensure DOM is updated
-      const timeoutId = setTimeout(scrollToBottom, 50);
-      return () => clearTimeout(timeoutId);
+    if (isOpen && scrollContainerRef.current) {
+      // Initial scroll
+      scrollToBottom();
+
+      // Observe changes in the container to scroll automatically
+      const observer = new MutationObserver(() => {
+        scrollToBottom();
+      });
+
+      observer.observe(scrollContainerRef.current, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+
+      return () => observer.disconnect();
     }
-  }, [messages, isLoading, isOpen]);
+  }, [isOpen]);
 
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'auto' // Instant scroll is often better for "moving up" feel
+      });
     }
+    // Backup using the end ref
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
   };
 
   const handleSendMessage = async () => {
