@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Pencil, Trash2, Users, LayoutGrid, LogOut, Shield, Database, Search } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Users, LayoutGrid, LogOut, Shield, Database as DatabaseIcon, Search } from "lucide-react";
 import { toast } from "sonner";
 import Logo from "@/components/Logo";
 import { DatasetParser, QAData } from "@/utils/datasetParser";
@@ -85,13 +85,13 @@ const OwnerDashboard = () => {
     console.log("=== SUPABASE CONFIG DEBUG ===");
     console.log("VITE_SUPABASE_URL:", import.meta.env.VITE_SUPABASE_URL);
     console.log("VITE_SUPABASE_PUBLISHABLE_KEY:", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.substring(0, 20) + "...");
-    console.log("Default Supabase client URL:", supabase.supabaseUrl);
-    console.log("Owner Supabase client URL:", ownerSupabase.supabaseUrl);
+    // console.log("Default Supabase client URL:", supabase.supabaseUrl);
+    // console.log("Owner Supabase client URL:", ownerSupabase.supabaseUrl);
 
     // Test connection with owner client
     ownerSupabase.from('features').select('*').limit(1).then(result => {
       console.log("Owner client test result:", result);
-    }).catch(error => {
+    }, error => {
       console.error("Owner client test error:", error);
     });
 
@@ -101,7 +101,7 @@ const OwnerDashboard = () => {
   // Test database connection
   const testDatabaseConnection = async () => {
     console.log("=== TESTING DATABASE CONNECTION ===");
-    console.log("Using ownerSupabase client with URL:", ownerSupabase.supabaseUrl);
+    // console.log("Using ownerSupabase client with URL:", ownerSupabase.supabaseUrl);
 
     try {
       // Test 1: Check if we can query the features table and get actual schema
@@ -191,7 +191,7 @@ const OwnerDashboard = () => {
         console.error("Error fetching features:", featuresError);
         toast.error("Failed to load features");
       } else {
-        setFeatures(featuresData || []);
+        setFeatures((featuresData as unknown as Feature[]) || []);
 
         // Detect available columns from the first feature
         if (featuresData && featuresData.length > 0) {
@@ -528,7 +528,7 @@ const OwnerDashboard = () => {
               Users
             </TabsTrigger>
             <TabsTrigger value="dataset" className="flex items-center gap-2">
-              <Database className="w-4 h-4" />
+              <DatabaseIcon className="w-4 h-4" />
               Dataset
             </TabsTrigger>
           </TabsList>
