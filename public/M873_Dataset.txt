@@ -1,0 +1,25 @@
+Owner: Mahfuzul Islam
+Project: M873 Simple AI Solutions
+
+[EN]
+Q: What is M873?
+A: M873 is a platform for simple AI solutions, helping users learn and build projects with ease.
+
+Q: Who is the owner?
+A: The owner is Mahfuzul Islam, a developer passionate about making AI accessible.
+
+Q: How do I get started?
+A: Click the "Get Started" button on the home page to access the dashboard and view available features.
+
+Q: python loop
+A: A for loop is used for iterating over a sequence (that is either a list, a tuple, a dictionary, a set, or a string). Example:\nfruits = ["apple", "banana", "cherry"]\nfor x in fruits:\n  print(x)
+
+[BN]
+Q: M873 কি?
+A: M873 হলো সহজ এআই সলিউশনের একটি প্ল্যাটফর্ম, যা ব্যবহারকারীদের সহজে শিখতে এবং প্রজেক্ট তৈরি করতে সাহায্য করে।
+
+Q: মালিক কে?
+A: মালিক হলেন মাহফুজুল ইসলাম।
+
+Q: আমি কিভাবে শুরু করব?
+A: ড্যাশবোর্ড এবং ফিচারগুলো দেখতে হোম পেজের "Get Started" বাটনে ক্লিক করুন।

@@ -1,0 +1,17 @@
+-- Run this in your Supabase SQL Editor to fix the "Failed to save feature" error
+
+-- Add 'status' column if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'features' AND column_name = 'status') THEN
+        ALTER TABLE public.features ADD COLUMN status TEXT DEFAULT 'upcoming';
+    END IF;
+END $$;
+
+-- Add 'link' column if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'features' AND column_name = 'link') THEN
+        ALTER TABLE public.features ADD COLUMN link TEXT;
+    END IF;
+END $$;
