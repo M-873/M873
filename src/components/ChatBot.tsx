@@ -86,7 +86,7 @@ You can reach out through the contact information provided on the website or use
       // Initial scroll
       scrollToBottom();
 
-      // Observe changes in the container to scroll automatically
+      // Observe changes in the container for various DOM updates
       const observer = new MutationObserver(() => {
         scrollToBottom();
       });
@@ -99,7 +99,7 @@ You can reach out through the contact information provided on the website or use
 
       return () => observer.disconnect();
     }
-  }, [isOpen]);
+  }, [isOpen, messages]); // Added messages dependency
 
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {
