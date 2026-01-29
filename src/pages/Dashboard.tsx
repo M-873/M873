@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import Logo from "@/components/Logo";
+import { fetchFeaturesSafe } from "@/utils/featuresSafeFetch";
 
 interface Feature {
   id: string;
@@ -25,21 +26,21 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchFeatures = async () => {
       console.log("Fetching features from Supabase...");
-      const { data, error } = await supabase
-        .from("features")
-        .select("*")
-        .order("sort_order", { ascending: true });
-
-      console.log("Supabase response:", { data, error });
+      
+      // Use safe fetching to handle missing columns
+      const { data, error } = await fetchFeaturesSafe();
+      
+      console.log("Safe fetch result:", { data, error });
       
       if (error) {
         console.error("Error fetching features:", error);
-      }
-      
-      if (!error && data) {
+        // Still set empty array to prevent loading forever
+        setFeatures([]);
+      } else if (data) {
         console.log("Features loaded:", data.length, "features");
         setFeatures(data);
       }
+      
       setLoading(false);
     };
 

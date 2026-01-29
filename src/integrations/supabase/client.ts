@@ -3,11 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 // Force use of environment variables from .env file
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://mgkarabtbhluvkrfyrmu.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1na2FyYWJ0YmhsdXZrcmZ5cm11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1NzkxNTQsImV4cCI6MjA4MDE1NTE1NH0.Kn14ixl4_2dyzH6BM3sAsdQ61lfPmtZPRoJD6Tz8cyc';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://zxbydjiptihzsxucvynp.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_OfJIxmZ_jiVGS4boYvt2Gg_BMRxUkKc';
 
-console.log("Supabase config:", { 
-  URL: SUPABASE_URL, 
+console.log("Supabase config:", {
+  URL: SUPABASE_URL,
   hasKey: !!SUPABASE_PUBLISHABLE_KEY && SUPABASE_PUBLISHABLE_KEY !== 'placeholder-key',
   keyLength: SUPABASE_PUBLISHABLE_KEY?.length,
   isProduction: import.meta.env.PROD,

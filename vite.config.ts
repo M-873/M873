@@ -11,10 +11,8 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
-      hmr: {
-        port: 8080,
-        clientPort: 8080,
-      },
+      hmr: false, // Disable hot module replacement to fix ERR_ABORTED errors
+      strictPort: false, // Allow fallback to different ports
       proxy: {
         '/functions': {
           target: env.VITE_SUPABASE_URL,

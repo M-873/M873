@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Dashboard Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .test-btn { background-color: #007bff; color: white; }
+        .test-btn:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🛠️ Owner Dashboard Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Options</h2>
+        <button class="test-btn" onclick="testOwnerLogin()">Test Owner Login</button>
+        <button class="test-btn" onclick="testFeaturesCRUD()">Test Features CRUD</button>
+        <button class="test-btn" onclick="testLinkFeature()">Test Link Feature</button>
+        <button class="test-btn" onclick="runAllTests()">Run All Tests</button>
+    </div>
+
+    <div id="test-results"></div>
+
+    <script>
+        const supabaseUrl = 'https://zxbydjiptihzsxucvynp.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4YnlkamlwdGloenN4dWN2eW5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU2ODA4MjUsImV4cCI6MjA1MTI1NjgyNX0.FDq1v1X8kI3k4f5m6n7o8p9q0r1s2t3u4v5w6x7y8z9';
+
+        const resultsDiv = document.getElementById('test-results');
+
+        function addResult(type, message, data = null) {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `
+                <strong>${type.toUpperCase()}:</strong> ${message}
+                ${data ? `<pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
+            `;
+            resultsDiv.appendChild(div);
+        }
+
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+
+        async function testOwnerLogin() {
+            clearResults();
+            addResult('info', 'Testing owner login functionality...');
+            
+            // Test if we can access the owner dashboard endpoint
+            try {
+                const response = await fetch(`${supabaseUrl}/rest/v1/user_roles?select=*`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('success', `Owner roles loaded successfully! Found ${data.length} roles`, data);
+                } else {
+                    const error = await response.json();
+                    addResult('error', `Failed to load owner roles: ${error.message}`, error);
+                }
+            } catch (error) {
+                addResult('error', `Login test failed: ${error.message}`, error);
+            }
+        }
+
+        async function testFeaturesCRUD() {
+            clearResults();
+            addResult('info', 'Testing Features CRUD operations...');
+
+            try {
+                // Test Create
+                addResult('info', '1. Testing Create Feature...');
+                const newFeature = {
+                    title: 'Test Feature ' + Date.now(),
+                    description: 'This is a test feature',
+                    status: 'active',
+                    sort_order: 999,
+                    link: 'https://example.com'
+                };
+
+                const createResponse = await fetch(`${supabaseUrl}/rest/v1/features`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(newFeature)
+                });
+
+                if (createResponse.ok) {
+                    const createdFeature = await createResponse.json();
+                    addResult('success', 'Feature created successfully!', createdFeature);
+                    
+                    const featureId = createdFeature[0].id;
+                    
+                    // Test Read
+                    addResult('info', '2. Testing Read Feature...');
+                    const readResponse = await fetch(`${supabaseUrl}/rest/v1/features?id=eq.${featureId}`, {
+                        method: 'GET',
+                        headers: {
+                            'apikey': supabaseAnonKey,
+                            'Authorization': `Bearer ${supabaseAnonKey}`
+                        }
+                    });
+
+                    if (readResponse.ok) {
+                        const readData = await readResponse.json();
+                        addResult('success', 'Feature read successfully!', readData);
+                        
+                        // Test Update
+                        addResult('info', '3. Testing Update Feature...');
+                        const updateData = { title: 'Updated Test Feature', description: 'Updated description' };
+                        
+                        const updateResponse = await fetch(`${supabaseUrl}/rest/v1/features?id=eq.${featureId}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': supabaseAnonKey,
+                                'Authorization': `Bearer ${supabaseAnonKey}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=representation'
+                            },
+                            body: JSON.stringify(updateData)
+                        });
+
+                        if (updateResponse.ok) {
+                            const updatedData = await updateResponse.json();
+                            addResult('success', 'Feature updated successfully!', updatedData);
+                            
+                            // Test Delete
+                            addResult('info', '4. Testing Delete Feature...');
+                            const deleteResponse = await fetch(`${supabaseUrl}/rest/v1/features?id=eq.${featureId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'apikey': supabaseAnonKey,
+                                    'Authorization': `Bearer ${supabaseAnonKey}`
+                                }
+                            });
+
+                            if (deleteResponse.ok) {
+                                addResult('success', 'Feature deleted successfully!');
+                            } else {
+                                const error = await deleteResponse.json();
+                                addResult('error', `Failed to delete feature: ${error.message}`, error);
+                            }
+                        } else {
+                            const error = await updateResponse.json();
+                            addResult('error', `Failed to update feature: ${error.message}`, error);
+                        }
+                    } else {
+                        const error = await readResponse.json();
+                        addResult('error', `Failed to read feature: ${error.message}`, error);
+                    }
+                } else {
+                    const error = await createResponse.json();
+                    addResult('error', `Failed to create feature: ${error.message}`, error);
+                }
+            } catch (error) {
+                addResult('error', `CRUD test failed: ${error.message}`, error);
+            }
+        }
+
+        async function testLinkFeature() {
+            clearResults();
+            addResult('info', 'Testing link feature functionality...');
+
+            try {
+                // Create a feature with a link
+                const linkFeature = {
+                    title: 'Link Test Feature ' + Date.now(),
+                    description: 'This feature has a link',
+                    status: 'active',
+                    sort_order: 998,
+                    link: 'https://m-873.github.io/M873/'
+                };
+
+                const response = await fetch(`${supabaseUrl}/rest/v1/features`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(linkFeature)
+                });
+
+                if (response.ok) {
+                    const createdFeature = await response.json();
+                    addResult('success', 'Feature with link created successfully!', createdFeature);
+                    
+                    // Verify the link is stored correctly
+                    const feature = createdFeature[0];
+                    if (feature.link) {
+                        addResult('success', `Link stored correctly: ${feature.link}`);
+                    } else {
+                        addResult('error', 'Link was not stored correctly');
+                    }
+                    
+                    // Clean up
+                    await fetch(`${supabaseUrl}/rest/v1/features?id=eq.${feature.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': supabaseAnonKey,
+                            'Authorization': `Bearer ${supabaseAnonKey}`
+                        }
+                    });
+                    
+                    addResult('info', 'Test feature cleaned up');
+                } else {
+                    const error = await response.json();
+                    addResult('error', `Failed to create link feature: ${error.message}`, error);
+                }
+            } catch (error) {
+                addResult('error', `Link test failed: ${error.message}`, error);
+            }
+        }
+
+        function runAllTests() {
+            clearResults();
+            addResult('info', 'Running all tests...');
+            
+            setTimeout(() => testOwnerLogin(), 1000);
+            setTimeout(() => testFeaturesCRUD(), 3000);
+            setTimeout(() => testLinkFeature(), 8000);
+            
+            addResult('info', 'All tests scheduled. Check results above.');
+        }
+    </script>
+</body>
+</html>

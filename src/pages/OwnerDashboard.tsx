@@ -51,10 +51,11 @@ const OwnerDashboard = () => {
   const [featureTitle, setFeatureTitle] = useState("");
   const [featureDescription, setFeatureDescription] = useState("");
   const [featureLink, setFeatureLink] = useState("");
+  const [featureStatus, setFeatureStatus] = useState<"active" | "upcoming">("upcoming");
   const [editingFeature, setEditingFeature] = useState<Feature | null>(null);
   const [isFeatureDialogOpen, setIsFeatureDialogOpen] = useState(false);
   const [availableColumns, setAvailableColumns] = useState<string[]>(['id', 'title', 'description', 'status', 'sort_order', 'created_at']);
-  
+
   // Dataset management state
   const [datasetParser, setDatasetParser] = useState<DatasetParser | null>(null);
   const [datasetStats, setDatasetStats] = useState<{ total: number; english: number; bengali: number } | null>(null);
@@ -86,14 +87,14 @@ const OwnerDashboard = () => {
     console.log("VITE_SUPABASE_PUBLISHABLE_KEY:", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.substring(0, 20) + "...");
     console.log("Default Supabase client URL:", supabase.supabaseUrl);
     console.log("Owner Supabase client URL:", ownerSupabase.supabaseUrl);
-    
+
     // Test connection with owner client
     ownerSupabase.from('features').select('*').limit(1).then(result => {
       console.log("Owner client test result:", result);
     }).catch(error => {
       console.error("Owner client test error:", error);
     });
-    
+
     console.log("=== END SUPABASE CONFIG DEBUG ===");
   }, []);
 
@@ -101,7 +102,7 @@ const OwnerDashboard = () => {
   const testDatabaseConnection = async () => {
     console.log("=== TESTING DATABASE CONNECTION ===");
     console.log("Using ownerSupabase client with URL:", ownerSupabase.supabaseUrl);
-    
+
     try {
       // Test 1: Check if we can query the features table and get actual schema
       console.log("Test 1: Querying features table...");
@@ -109,11 +110,11 @@ const OwnerDashboard = () => {
         .from("features")
         .select("*")
         .limit(1);
-      
-      console.log("Features query result:", { 
-        data: featuresData, 
+
+      console.log("Features query result:", {
+        data: featuresData,
         error: featuresError,
-        dataLength: featuresData?.length 
+        dataLength: featuresData?.length
       });
 
       // Test 1b: Check table schema
@@ -122,8 +123,8 @@ const OwnerDashboard = () => {
         .from("features")
         .select("id, title, description, status, sort_order, created_at")
         .limit(0);
-      
-      console.log("Schema check result:", { 
+
+      console.log("Schema check result:", {
         error: schemaError,
         columns: schemaError ? 'unknown' : ['id', 'title', 'description', 'status', 'sort_order', 'created_at']
       });
@@ -131,8 +132,8 @@ const OwnerDashboard = () => {
       // Test 2: Check user session
       console.log("Test 2: Checking user session...");
       const { data: sessionData, error: sessionError } = await ownerSupabase.auth.getSession();
-      console.log("Session result:", { 
-        session: sessionData, 
+      console.log("Session result:", {
+        session: sessionData,
         error: sessionError,
         hasSession: !!sessionData.session,
         user: sessionData.session?.user
@@ -146,15 +147,15 @@ const OwnerDashboard = () => {
         status: 'active',
         sort_order: 999
       };
-      
+
       const { data: insertData, error: insertError } = await ownerSupabase
         .from("features")
         .insert(testData)
         .select()
         .single();
-        
-      console.log("Insert test result:", { 
-        data: insertData, 
+
+      console.log("Insert test result:", {
+        data: insertData,
         error: insertError,
         success: !insertError
       });
@@ -180,7 +181,7 @@ const OwnerDashboard = () => {
     try {
       // Build select query with all available columns including link
       let selectQuery = "id, title, description, status, sort_order, link, created_at";
-      
+
       const { data: featuresData, error: featuresError } = await ownerSupabase
         .from("features")
         .select(selectQuery)
@@ -191,11 +192,11 @@ const OwnerDashboard = () => {
         toast.error("Failed to load features");
       } else {
         setFeatures(featuresData || []);
-        
+
         // Detect available columns from the first feature
         if (featuresData && featuresData.length > 0) {
           const firstFeature = featuresData[0];
-          const columns = Object.keys(firstFeature).filter(key => 
+          const columns = Object.keys(firstFeature).filter(key =>
             key !== 'id' && key !== 'created_at' && key !== 'updated_at'
           );
           setAvailableColumns(columns);
@@ -252,7 +253,7 @@ const OwnerDashboard = () => {
       setDatasetSearchResults([]);
       return;
     }
-    
+
     const results = datasetParser.searchDataset(datasetSearch);
     setDatasetSearchResults(results);
   };
@@ -275,6 +276,7 @@ const OwnerDashboard = () => {
       const saveData: Partial<Feature> = {
         title: featureTitle,
         description: featureDescription || null,
+        status: featureStatus,
       };
 
       // Only add link if the column exists and a value is provided
@@ -287,7 +289,7 @@ const OwnerDashboard = () => {
       if (!editingFeature) {
         const maxOrder = features.length > 0 ? Math.max(...features.map(f => f.sort_order || 0)) : 0;
         saveData.sort_order = maxOrder + 1;
-        saveData.status = 'active'; // Add required status field
+        // status is already set in saveData
       }
 
       console.log("Save Data:", saveData);
@@ -317,6 +319,7 @@ const OwnerDashboard = () => {
       setFeatureTitle("");
       setFeatureDescription("");
       if (availableColumns.includes('link')) setFeatureLink("");
+      setFeatureStatus("upcoming");
       setEditingFeature(null);
       setIsFeatureDialogOpen(false);
       fetchData();
@@ -348,7 +351,7 @@ const OwnerDashboard = () => {
   const handleDeleteFeature = async (id: string) => {
     console.log("=== DELETE FEATURE DEBUG - START ===");
     console.log("Delete button clicked for feature ID:", id);
-    
+
     if (!confirm("Are you sure you want to delete this feature?")) {
       console.log("User cancelled deletion");
       return;
@@ -362,7 +365,7 @@ const OwnerDashboard = () => {
     try {
       const { error, data } = await ownerSupabase.from("features").delete().eq("id", id);
       console.log("Delete result:", { error, data });
-      
+
       if (error) {
         console.error("Delete error details:", {
           code: error.code,
@@ -372,7 +375,7 @@ const OwnerDashboard = () => {
         });
         throw error;
       }
-      
+
       toast.success("Feature deleted!");
       fetchData();
     } catch (error: unknown) {
@@ -397,6 +400,7 @@ const OwnerDashboard = () => {
     setEditingFeature(feature);
     setFeatureTitle(feature.title);
     setFeatureDescription(feature.description || "");
+    setFeatureStatus((feature.status as "active" | "upcoming") || "upcoming");
     // Only set link if the column exists
     if (availableColumns.includes('link')) {
       setFeatureLink(feature.link || "");
@@ -405,13 +409,16 @@ const OwnerDashboard = () => {
   };
 
   const openAddDialog = () => {
+    console.log("=== OPEN ADD DIALOG ===");
     setEditingFeature(null);
     setFeatureTitle("");
     setFeatureDescription("");
+    setFeatureStatus("upcoming");
     if (availableColumns.includes('link')) {
       setFeatureLink("");
     }
     setIsFeatureDialogOpen(true);
+    console.log("Dialog should be open now");
   };
 
   const getUserRole = (userId: string) => {
@@ -498,9 +505,9 @@ const OwnerDashboard = () => {
               <div className="text-xs text-white/70">
                 Debug: User: {user ? '✓' : '✗'} | Owner: {isOwner ? '✓' : '✗'} | Loading: {loading ? '✓' : '✗'}
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={testDatabaseConnection}
                 className="border-white/20 text-white hover:text-white hover:bg-white/10"
               >
@@ -542,7 +549,7 @@ const OwnerDashboard = () => {
                 Add Feature
               </Button>
             </div>
-            
+
             {/* Feature Dialog - Separate from trigger buttons */}
             <Dialog open={isFeatureDialogOpen} onOpenChange={setIsFeatureDialogOpen}>
               <DialogContent className="max-w-lg">
@@ -584,6 +591,33 @@ const OwnerDashboard = () => {
                       </p>
                     </div>
                   )}
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <div className="flex gap-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id="upcoming"
+                          value="upcoming"
+                          checked={featureStatus === "upcoming"}
+                          onChange={(e) => setFeatureStatus(e.target.value as "active" | "upcoming")}
+                          className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <Label htmlFor="upcoming">Upcoming</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          id="active"
+                          value="active"
+                          checked={featureStatus === "active"}
+                          onChange={(e) => setFeatureStatus(e.target.value as "active" | "upcoming")}
+                          className="h-4 w-4 border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <Label htmlFor="active">Active</Label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>
@@ -684,11 +718,10 @@ const OwnerDashboard = () => {
                         <TableRow key={profile.id}>
                           <TableCell className="font-medium">{profile.email}</TableCell>
                           <TableCell>
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                              role === "owner" 
-                                ? "bg-primary text-primary-foreground" 
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs ${role === "owner"
+                                ? "bg-primary text-primary-foreground"
                                 : "bg-muted text-muted-foreground"
-                            }`}>
+                              }`}>
                               {role}
                             </span>
                           </TableCell>
@@ -782,11 +815,10 @@ const OwnerDashboard = () => {
                     {datasetSearchResults.map((qa, index) => (
                       <div key={index} className="border rounded-lg p-4 space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            qa.language === 'EN' 
-                              ? 'bg-blue-100 text-blue-800' 
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${qa.language === 'EN'
+                              ? 'bg-blue-100 text-blue-800'
                               : 'bg-green-100 text-green-800'
-                          }`}>
+                            }`}>
                             {qa.language === 'EN' ? 'English' : 'Bengali'}
                           </span>
                         </div>

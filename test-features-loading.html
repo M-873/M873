@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features Loading Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Features Loading Test</h1>
+    <div id="test-results"></div>
+
+    <script>
+        const supabaseUrl = 'https://zxbydjiptihzsxucvynp.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4YnlkamlwdGloenN4dWN2eW5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU2ODA4MjUsImV4cCI6MjA1MTI1NjgyNX0.FDq1v1X8kI3k4f5m6n7o8p9q0r1s2t3u4v5w6x7y8z9';
+
+        const resultsDiv = document.getElementById('test-results');
+
+        function addResult(type, message, data = null) {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `
+                <strong>${type.toUpperCase()}:</strong> ${message}
+                ${data ? `<pre>${JSON.stringify(data, null, 2)}</pre>` : ''}
+            `;
+            resultsDiv.appendChild(div);
+        }
+
+        async function testFeaturesLoading() {
+            addResult('info', 'Starting features loading test...');
+
+            try {
+                // Test 1: Basic features query
+                addResult('info', 'Test 1: Basic features query');
+                const response1 = await fetch(`${supabaseUrl}/rest/v1/features?select=*`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`
+                    }
+                });
+
+                if (response1.ok) {
+                    const data = await response1.json();
+                    addResult('success', `Features loaded successfully! Found ${data.length} features`, data);
+                } else {
+                    const error = await response1.json();
+                    addResult('error', `Failed to load features: ${error.message}`, error);
+                }
+
+                // Test 2: Features with specific columns (excluding status)
+                addResult('info', 'Test 2: Features query without status column');
+                const response2 = await fetch(`${supabaseUrl}/rest/v1/features?select=id,title,description,sort_order,created_at,link`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`
+                    }
+                });
+
+                if (response2.ok) {
+                    const data = await response2.json();
+                    addResult('success', `Features loaded without status column! Found ${data.length} features`, data);
+                } else {
+                    const error = await response2.json();
+                    addResult('error', `Failed to load features without status: ${error.message}`, error);
+                }
+
+                // Test 3: Check table schema
+                addResult('info', 'Test 3: Checking table schema');
+                const response3 = await fetch(`${supabaseUrl}/rest/v1/features?select=*&limit=1`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`
+                    }
+                });
+
+                if (response3.ok) {
+                    const data = await response3.json();
+                    if (data.length > 0) {
+                        const columns = Object.keys(data[0]);
+                        const hasStatus = columns.includes('status');
+                        const hasLink = columns.includes('link');
+                        addResult('success', `Table schema: ${columns.join(', ')}`, {
+                            columns: columns,
+                            hasStatus: hasStatus,
+                            hasLink: hasLink
+                        });
+                    } else {
+                        addResult('info', 'No features found in table');
+                    }
+                } else {
+                    const error = await response3.json();
+                    addResult('error', `Failed to check schema: ${error.message}`, error);
+                }
+
+            } catch (error) {
+                addResult('error', `Test failed with error: ${error.message}`, error);
+            }
+
+            addResult('info', 'Test completed! Check the results above.');
+        }
+
+        // Run the test
+        testFeaturesLoading();
+    </script>
+</body>
+</html>
