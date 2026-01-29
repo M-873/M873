@@ -48,17 +48,18 @@ CREATE POLICY "Owners can view email logs" ON public.email_logs
   );
 
 -- Function to generate OTP
+DROP FUNCTION IF EXISTS public.generate_owner_otp(TEXT);
 CREATE OR REPLACE FUNCTION public.generate_owner_otp(p_email TEXT)
-RETURNS TABLE(otp TEXT, expires_at TIMESTAMP WITH TIME ZONE) AS $$
+RETURNS TABLE(res_otp TEXT, res_expires_at TIMESTAMP WITH TIME ZONE) AS $$
 DECLARE
-  v_otp TEXT;
-  v_expires_at TIMESTAMP WITH TIME ZONE;
+  v_generated_otp TEXT;
+  v_new_expires_at TIMESTAMP WITH TIME ZONE;
 BEGIN
-  v_otp := LPAD(FLOOR(RANDOM() * 1000000)::TEXT, 6, '0');
-  v_expires_at := NOW() + INTERVAL '10 minutes';
+  v_generated_otp := LPAD(FLOOR(RANDOM() * 1000000)::TEXT, 6, '0');
+  v_new_expires_at := NOW() + INTERVAL '10 minutes';
   
   INSERT INTO public.owner_otps (email, otp, expires_at, created_at)
-  VALUES (p_email, v_otp, v_expires_at, NOW())
+  VALUES (p_email, v_generated_otp, v_new_expires_at, NOW())
   ON CONFLICT (email) 
   DO UPDATE SET 
     otp = EXCLUDED.otp,
@@ -66,11 +67,12 @@ BEGIN
     created_at = EXCLUDED.created_at,
     used = FALSE;
   
-  RETURN QUERY SELECT v_otp, v_expires_at;
+  RETURN QUERY SELECT v_generated_otp, v_new_expires_at;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to verify OTP
+DROP FUNCTION IF EXISTS public.verify_owner_otp(TEXT, TEXT);
 CREATE OR REPLACE FUNCTION public.verify_owner_otp(p_email TEXT, p_otp TEXT)
 RETURNS BOOLEAN AS $$
 DECLARE

@@ -80,8 +80,10 @@ You can reach out through the contact information provided on the website or use
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (isOpen) {
+      scrollToBottom();
+    }
+  }, [messages, isLoading, isOpen]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -103,11 +105,11 @@ You can reach out through the contact information provided on the website or use
 
     try {
       const response = await aiServiceRef.current.generateResponse(inputValue.trim());
-      
+
       if (!response) {
         throw new Error('No response received from AI service');
       }
-      
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: response.content || "I'm sorry, I couldn't generate a response.",
@@ -157,7 +159,7 @@ You can reach out through the contact information provided on the website or use
               M873 Assistant
             </CardTitle>
           </CardHeader>
-          
+
           <CardContent className="flex-1 p-0 flex flex-col">
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -168,11 +170,10 @@ You can reach out through the contact information provided on the website or use
                 >
                   {message.content && (
                     <div
-                      className={`max-w-[70%] rounded-lg px-3 py-2 text-sm ${
-                        message.isUser
+                      className={`max-w-[70%] rounded-lg px-3 py-2 text-sm ${message.isUser
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted text-muted-foreground'
-                      }`}
+                        }`}
                     >
                       {message.content.split('\n').map((line, index) => (
                         <div key={index}>{line}</div>
