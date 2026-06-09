@@ -80,67 +80,30 @@ const OwnerDashboard = () => {
   // Use the same supabase client to maintain session consistency
   const ownerSupabase = supabase;
 
-  // Debug Supabase configuration
+  // Initialize component
   useEffect(() => {
-    console.log("=== SUPABASE CONFIG DEBUG ===");
-    console.log("VITE_SUPABASE_URL:", import.meta.env.VITE_SUPABASE_URL);
-    console.log("VITE_SUPABASE_PUBLISHABLE_KEY:", import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.substring(0, 20) + "...");
-    // console.log("Default Supabase client URL:", supabase.supabaseUrl);
-    // console.log("Owner Supabase client URL:", ownerSupabase.supabaseUrl);
-
-    // Test connection with owner client
-    ownerSupabase.from('features').select('*').limit(1).then(result => {
-      console.log("Owner client test result:", result);
-    }, error => {
-      console.error("Owner client test error:", error);
-    });
-
-    console.log("=== END SUPABASE CONFIG DEBUG ===");
+    // Component initialization - debug logs removed
   }, []);
 
   // Test database connection
   const testDatabaseConnection = async () => {
-    console.log("=== TESTING DATABASE CONNECTION ===");
-    // console.log("Using ownerSupabase client with URL:", ownerSupabase.supabaseUrl);
-
     try {
-      // Test 1: Check if we can query the features table and get actual schema
-      console.log("Test 1: Querying features table...");
+      // Test database connection - debug logs removed
       const { data: featuresData, error: featuresError } = await ownerSupabase
         .from("features")
         .select("*")
         .limit(1);
 
-      console.log("Features query result:", {
-        data: featuresData,
-        error: featuresError,
-        dataLength: featuresData?.length
-      });
-
-      // Test 1b: Check table schema
-      console.log("Test 1b: Checking table schema...");
+      // Test table schema
       const { data: schemaData, error: schemaError } = await ownerSupabase
         .from("features")
         .select("id, title, description, status, sort_order, created_at")
         .limit(0);
 
-      console.log("Schema check result:", {
-        error: schemaError,
-        columns: schemaError ? 'unknown' : ['id', 'title', 'description', 'status', 'sort_order', 'created_at']
-      });
-
-      // Test 2: Check user session
-      console.log("Test 2: Checking user session...");
+      // Test user session
       const { data: sessionData, error: sessionError } = await ownerSupabase.auth.getSession();
-      console.log("Session result:", {
-        session: sessionData,
-        error: sessionError,
-        hasSession: !!sessionData.session,
-        user: sessionData.session?.user
-      });
 
-      // Test 3: Check RLS policies by trying a simple insert with only basic fields
-      console.log("Test 3: Testing insert permission with minimal data...");
+      // Test RLS policies by trying a simple insert with only basic fields
       const testData = {
         title: "TEST_FEATURE_" + Date.now(),
         description: "Test description",
@@ -154,26 +117,18 @@ const OwnerDashboard = () => {
         .select()
         .single();
 
-      console.log("Insert test result:", {
-        data: insertData,
-        error: insertError,
-        success: !insertError
-      });
-
       // If insert succeeded, delete the test data
       if (insertData?.id) {
-        console.log("Test 4: Cleaning up test data...");
         const { error: deleteError } = await ownerSupabase
           .from("features")
           .delete()
           .eq("id", insertData.id);
-        console.log("Cleanup result:", { error: deleteError, success: !deleteError });
       }
 
     } catch (error) {
       console.error("Database connection test failed:", error);
     }
-    console.log("=== DATABASE CONNECTION TEST COMPLETE ===");
+    // Database connection test completed
   };
 
   const fetchData = async () => {
@@ -200,11 +155,8 @@ const OwnerDashboard = () => {
             key !== 'id' && key !== 'created_at' && key !== 'updated_at'
           );
           setAvailableColumns(columns);
-          console.log("Available columns detected:", columns);
-          console.log("First feature data:", firstFeature);
-          console.log("Link column available:", columns.includes('link'));
+          // Debug logs removed to prevent console clutter
         } else {
-          console.log("No features found, using default columns");
           setAvailableColumns(['title', 'description', 'status', 'sort_order']);
         }
       }
@@ -264,11 +216,6 @@ const OwnerDashboard = () => {
       return;
     }
 
-    console.log("=== SAVE FEATURE STARTING ===");
-    console.log("Title:", featureTitle);
-    console.log("Status:", featureStatus);
-    console.log("Link:", featureLink);
-
     try {
       const saveData: any = {
         title: featureTitle,
@@ -282,10 +229,7 @@ const OwnerDashboard = () => {
         saveData.sort_order = maxOrder + 1;
       }
 
-      console.log("Prepared save data:", saveData);
-
       if (editingFeature) {
-        console.log(`Updating feature ID: ${editingFeature.id}...`);
         const { error } = await ownerSupabase
           .from("features")
           .update(saveData)
@@ -294,7 +238,6 @@ const OwnerDashboard = () => {
         if (error) throw error;
         toast.success("Feature updated successfully!");
       } else {
-        console.log("Inserting new feature...");
         const { error } = await ownerSupabase
           .from("features")
           .insert(saveData);
@@ -322,13 +265,12 @@ const OwnerDashboard = () => {
         toast.error(`Error: ${errorMessage}`);
       }
     } finally {
-      console.log("=== SAVE FEATURE COMPLETED ===");
+      // Cleanup completed
     }
   };
 
   const handleDeleteFeature = async (id: string) => {
-    console.log("=== DELETE FEATURE DEBUG - START ===");
-    console.log("Delete button clicked for feature ID:", id);
+    // Delete feature handler
 
     if (!confirm("Are you sure you want to delete this feature?")) {
       console.log("User cancelled deletion");
@@ -342,7 +284,6 @@ const OwnerDashboard = () => {
 
     try {
       const { error, data } = await ownerSupabase.from("features").delete().eq("id", id);
-      console.log("Delete result:", { error, data });
 
       if (error) {
         console.error("Delete error details:", {
@@ -559,7 +500,7 @@ const OwnerDashboard = () => {
                       type="url"
                     />
                     <p className="text-xs text-muted-foreground">
-                      When set, "View Details" will open this link
+                      When set, "Try Now" will open this link
                     </p>
                   </div>
                   <div className="space-y-2">

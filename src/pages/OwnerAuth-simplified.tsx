@@ -31,22 +31,57 @@ const OwnerAuth = () => {
 
     try {
       if (email !== ALLOWED_EMAIL || password !== ALLOWED_PASSWORD) {
-        toast.error("Invalid credentials");
+        toast.error("Invalid owner credentials");
+        setIsLoading(false);
         return;
       }
 
-      // Simple authentication - no OTP required
-      const { data, error } = await supabase.auth.signInWithPassword({
+      let { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        if (msg.toLowerCase().includes("invalid login credentials")) {
+          const { error: signupError } = await supabase.auth.signUp({
+            email,
+            password,
+          });
+          if (signupError) {
+            throw signupError;
+          }
+          const result = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          data = result.data;
+          error = result.error;
+          if (error) throw error;
+        } else {
+          throw error;
+        }
+      }
 
-      toast.success("Sign in successful!");
-      navigate("/owner-dashboard");
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .eq("role", "owner")
+        .maybeSingle();
+
+      if (!roleData && email !== ALLOWED_EMAIL) {
+        await supabase.auth.signOut();
+        toast.error("Access denied. You are not an owner.");
+        return;
+      }
+
+      toast.success("Signed in as owner!");
+      navigate("/owner/dashboard");
     } catch (error) {
-      toast.error("Authentication failed");
+      const message =
+        error instanceof Error ? error.message : "Failed to sign in";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

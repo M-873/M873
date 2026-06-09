@@ -25,19 +25,14 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchFeatures = async () => {
-      console.log("Fetching features from Supabase...");
-
       // Use safe fetching to handle missing columns
       const { data, error } = await fetchFeaturesSafe();
-
-      console.log("Safe fetch result:", { data, error });
 
       if (error) {
         console.error("Error fetching features:", error);
         // Still set empty array to prevent loading forever
         setFeatures([]);
       } else if (data) {
-        console.log("Features loaded:", data.length, "features");
         setFeatures(data);
       }
 
@@ -46,6 +41,15 @@ const Dashboard = () => {
 
     fetchFeatures();
   }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-accent/5">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-lg font-semibold text-primary tracking-wide">Loading...</p>
+      </div>
+    );
+  }
+
   return <SidebarProvider>
     <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-background to-accent/5">
       {/* Sidebar */}
@@ -130,7 +134,7 @@ const Dashboard = () => {
                           }
                         }}
                       >
-                        View Details
+                        Try Now
                       </Button>
                     </CardContent>
                   </Card>
